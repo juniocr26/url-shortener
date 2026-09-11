@@ -1,0 +1,161 @@
+name: url-shortener
+
+x-cassandra-common: &cassandra-common
+  image: cassandra:5.0
+  entrypoint: ["bash", "/usr/local/bin/url-shortener-cassandra-entrypoint"]
+  command: ["cassandra", "-f"]
+  networks:
+    - backend
+  expose:
+    - "7000"
+    - "7001"
+    - "7199"
+    - "9042"
+  environment:
+    CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME:-url_shortener_cluster}
+    CASSANDRA_DC: ${CASSANDRA_DATACENTER:-datacenter1}
+    CASSANDRA_RACK: ${CASSANDRA_RACK:-rack1}
+    CASSANDRA_ENDPOINT_SNITCH: ${CASSANDRA_ENDPOINT_SNITCH:-GossipingPropertyFileSnitch}
+    CASSANDRA_SEEDS: ${CASSANDRA_SEEDS:-cassandra-1}
+    CASSANDRA_USERNAME: ${CASSANDRA_USERNAME:?Set CASSANDRA_USERNAME in .env}
+    CASSANDRA_PASSWORD: ${CASSANDRA_PASSWORD:?Set CASSANDRA_PASSWORD in .env}
+    MAX_HEAP_SIZE: ${CASSANDRA_MAX_HEAP_SIZE:-512M}
+    HEAP_NEWSIZE: ${CASSANDRA_HEAP_NEWSIZE:-128M}
+  volumes:
+    - ./docker/cassandra/entrypoint.sh:/usr/local/bin/url-shortener-cassandra-entrypoint:ro
+    - ./docker/cassandra/healthcheck.sh:/usr/local/bin/url-shortener-cassandra-healthcheck:ro
+  healthcheck:
+    test: ["CMD", "bash", "/usr/local/bin/url-shortener-cassandra-healthcheck"]
+    interval: 20s
+    timeout: 15s
+    retries: 30
+    start_period: 90s
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.14}
+        UV_VERSION: ${UV_VERSION:-0.8.17}
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
+    image: url-shortener-app:local
+    working_dir: /app
+    command: ["sh", "-c", "uvicorn app.main:app --host \"$${APP_HOST}\" --port \"$${APP_PORT}\" --reload"]
+    tty: true
+    stdin_open: true
+    networks:
+      - backend
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    volumes:
+      - .:/app
+      - app_uv_cache:/home/app/.cache/uv
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      APP_PORT: ${APP_PORT:-8000}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      CASSANDRA_CONTACT_POINTS: ${CASSANDRA_CONTACT_POINTS:-cassandra-1,cassandra-2,cassandra-3}
+      CASSANDRA_PORT: ${CASSANDRA_PORT:-9042}
+      CASSANDRA_KEYSPACE: ${CASSANDRA_KEYSPACE:-url_shortener}
+      CASSANDRA_USERNAME: ${CASSANDRA_USERNAME:-}
+      CASSANDRA_PASSWORD: ${CASSANDRA_PASSWORD:-}
+      CASSANDRA_DATACENTER: ${CASSANDRA_DATACENTER:-datacenter1}
+      SHORT_URL_BASE: ${SHORT_URL_BASE:-http://localhost:8000}
+      URL_ID_START: ${URL_ID_START:-14776336}
+      BASIC_AUTH_USERNAME: ${BASIC_AUTH_USERNAME:-}
+      BASIC_AUTH_PASSWORD: ${BASIC_AUTH_PASSWORD:-}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import os, urllib.request; port = os.environ.get(\"APP_PORT\", \"8000\"); urllib.request.urlopen(f\"http://127.0.0.1:{port}/openapi.json\", timeout=3).read()'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      sh -c 'if [ -n "$${REDIS_PASSWORD:-}" ]; then
+        exec redis-server --appendonly yes --appendfsync everysec --requirepass "$$REDIS_PASSWORD";
+      else
+        exec redis-server --appendonly yes --appendfsync everysec;
+      fi'
+    networks:
+      - backend
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$${REDIS_PASSWORD:-}\" ]; then REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q PONG; else redis-cli ping | grep -q PONG; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  cassandra-1:
+    <<: *cassandra-common
+    ports:
+      - "127.0.0.1:9042:9042"
+    volumes:
+      - ./docker/cassandra/entrypoint.sh:/usr/local/bin/url-shortener-cassandra-entrypoint:ro
+      - ./docker/cassandra/healthcheck.sh:/usr/local/bin/url-shortener-cassandra-healthcheck:ro
+      - ./.dockerized-cassandra/cassandra-1:/var/lib/cassandra
+
+  cassandra-2:
+    <<: *cassandra-common
+    depends_on:
+      cassandra-1:
+        condition: service_healthy
+    volumes:
+      - ./docker/cassandra/entrypoint.sh:/usr/local/bin/url-shortener-cassandra-entrypoint:ro
+      - ./docker/cassandra/healthcheck.sh:/usr/local/bin/url-shortener-cassandra-healthcheck:ro
+      - ./.dockerized-cassandra/cassandra-2:/var/lib/cassandra
+
+  cassandra-3:
+    <<: *cassandra-common
+    depends_on:
+      cassandra-2:
+        condition: service_healthy
+    volumes:
+      - ./docker/cassandra/entrypoint.sh:/usr/local/bin/url-shortener-cassandra-entrypoint:ro
+      - ./docker/cassandra/healthcheck.sh:/usr/local/bin/url-shortener-cassandra-healthcheck:ro
+      - ./.dockerized-cassandra/cassandra-3:/var/lib/cassandra
+
+  cassandra-init:
+    image: cassandra:5.0
+    networks:
+      - backend
+    depends_on:
+      cassandra-1:
+        condition: service_healthy
+      cassandra-2:
+        condition: service_healthy
+      cassandra-3:
+        condition: service_healthy
+    environment:
+      CASSANDRA_USERNAME: ${CASSANDRA_USERNAME:?Set CASSANDRA_USERNAME in .env}
+      CASSANDRA_PASSWORD: ${CASSANDRA_PASSWORD:?Set CASSANDRA_PASSWORD in .env}
+      CASSANDRA_KEYSPACE: ${CASSANDRA_KEYSPACE:-url_shortener}
+      CASSANDRA_DATACENTER: ${CASSANDRA_DATACENTER:-datacenter1}
+      CASSANDRA_PORT: ${CASSANDRA_PORT:-9042}
+    volumes:
+      - ./docker/cassandra/bootstrap.sh:/usr/local/bin/url-shortener-cassandra-bootstrap:ro
+    entrypoint: ["bash", "/usr/local/bin/url-shortener-cassandra-bootstrap"]
+    restart: "no"
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  app_uv_cache:
+  redis_data:

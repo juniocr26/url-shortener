@@ -136,6 +136,9 @@ celerybeat.pid
 *.aof
 *.pid
 
+# Local Cassandra data
+.dockerized-cassandra/
+
 # RabbitMQ
 mnesia/
 rabbitmq/

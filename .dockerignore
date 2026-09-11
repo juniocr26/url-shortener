@@ -1,0 +1,45 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+.env-audit-backups
+.dockerized-cassandra
+
+# Git and editor metadata
+.git
+.gitignore
+.vscode
+.idea
+
+# Python local state
+.venv
+__pycache__
+*.py[codz]
+*.egg-info
+
+# Test, lint, type-check, and coverage artifacts
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.pyre
+.coverage
+.coverage.*
+coverage.xml
+htmlcov
+cover
+
+# Build and packaging artifacts
+build
+dist
+sdist
+wheels
+*.egg
+
+# Runtime data and temporary files
+*.rdb
+*.aof
+*.pid
+*.log
+tmp
+temp
+.DS_Store
