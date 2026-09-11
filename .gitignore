@@ -139,6 +139,9 @@ celerybeat.pid
 # Local Cassandra data
 .dockerized-cassandra/
 
+# Local Redis data
+.dockerized-redis/
+
 # RabbitMQ
 mnesia/
 rabbitmq/

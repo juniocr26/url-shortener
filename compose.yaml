@@ -46,10 +46,11 @@ services:
     command: ["sh", "-c", "uvicorn app.main:app --host \"$${APP_HOST}\" --port \"$${APP_PORT}\" --reload"]
     tty: true
     stdin_open: true
+    restart: unless-stopped
     networks:
       - backend
     ports:
-      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+      - "127.0.0.1:${APP_PORT:-8000}:${APP_PORT:-8000}"
     volumes:
       - .:/app
       - app_uv_cache:/home/app/.cache/uv
@@ -80,6 +81,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     command: >
       sh -c 'if [ -n "$${REDIS_PASSWORD:-}" ]; then
         exec redis-server --appendonly yes --appendfsync everysec --requirepass "$$REDIS_PASSWORD";
@@ -90,8 +92,10 @@ services:
       - backend
     expose:
       - "6379"
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
-      - redis_data:/data
+      - ./.dockerized-redis:/data
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     healthcheck:
@@ -103,6 +107,7 @@ services:
 
   cassandra-1:
     <<: *cassandra-common
+    restart: unless-stopped
     ports:
       - "127.0.0.1:9042:9042"
     volumes:
@@ -112,9 +117,10 @@ services:
 
   cassandra-2:
     <<: *cassandra-common
+    restart: unless-stopped
     depends_on:
       cassandra-1:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - ./docker/cassandra/entrypoint.sh:/usr/local/bin/url-shortener-cassandra-entrypoint:ro
       - ./docker/cassandra/healthcheck.sh:/usr/local/bin/url-shortener-cassandra-healthcheck:ro
@@ -122,6 +128,7 @@ services:
 
   cassandra-3:
     <<: *cassandra-common
+    restart: unless-stopped
     depends_on:
       cassandra-2:
         condition: service_healthy
@@ -158,4 +165,3 @@ networks:
 
 volumes:
   app_uv_cache:
-  redis_data:

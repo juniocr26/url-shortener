@@ -3,7 +3,8 @@
 .env.*
 !.env.example
 .env-audit-backups
-.dockerized-cassandra
+.dockerized-cassandra/
+.dockerized-redis/
 
 # Git and editor metadata
 .git

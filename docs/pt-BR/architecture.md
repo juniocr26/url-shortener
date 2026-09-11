@@ -41,7 +41,8 @@ Componentes implementados:
 - Documentação OpenAPI automática gerada pelo FastAPI.
 - `redis`: Redis 7 com persistência append-only file.
 - `cassandra-1`, `cassandra-2`, `cassandra-3`: nós Cassandra 5.0 no mesmo cluster local.
-- Volumes Docker para Redis e para cada nó Cassandra.
+- Bind mounts locais para Redis e para cada nó Cassandra.
+- Autenticação Cassandra por senha e bootstrap do keyspace configurado.
 - Health checks para sinais de prontidão dos serviços.
 - Descoberta de serviços por DNS usando os nomes do Docker Compose.
 
@@ -115,8 +116,8 @@ Esta etapa não inicializa essa chave. Essa inicialização deve ser implementad
 Persistência do Redis:
 
 - AOF está habilitado com `appendfsync everysec`.
-- Os dados ficam no volume Docker `redis_data`.
-- Restarts preservam o estado local enquanto o volume for mantido.
+- Os dados ficam em `.dockerized-redis/`.
+- Restarts preservam o estado local enquanto esse diretório for mantido.
 - Essa configuração local não promete perda zero de dados; com `appendfsync everysec`, escritas muito recentes ainda podem estar em risco em uma falha brusca.
 
 ## Base62
@@ -148,19 +149,19 @@ flowchart TD
 
 Cada nó Cassandra possui persistência independente:
 
-- `cassandra-1` -> `cassandra_data_1`
-- `cassandra-2` -> `cassandra_data_2`
-- `cassandra-3` -> `cassandra_data_3`
+- `cassandra-1` -> `.dockerized-cassandra/cassandra-1/`
+- `cassandra-2` -> `.dockerized-cassandra/cassandra-2/`
+- `cassandra-3` -> `.dockerized-cassandra/cassandra-3/`
 
 Nenhum diretório de dados é compartilhado entre os nós.
 
 ## Replicação
 
-A configuração planejada para estudo é um keyspace com replication factor 3 em um datacenter local. Um keyspace futuro deve usar uma estratégia adequada ao datacenter configurado, como `NetworkTopologyStrategy` com o nome do datacenter local.
+O keyspace configurado é criado no bootstrap com replication factor 3 em um datacenter local, usando `NetworkTopologyStrategy` e o nome do datacenter configurado.
 
 Com três nós e RF=3, cada linha deve ser replicada nos três nós daquele datacenter. Isso é útil para estudar disponibilidade e tradeoffs de consistência, mas não prova por si só throughput ou escalabilidade de produção.
 
-Nenhum keyspace ou tabela é criado nesta etapa porque os access patterns e o modelo de dados ainda não foram decididos.
+Nenhuma tabela da aplicação é criada nesta etapa porque os access patterns e o modelo de dados ainda não foram decididos.
 
 ## Networking Docker
 
@@ -171,7 +172,7 @@ Os serviços se comunicam pela bridge network do Compose usando nomes DNS:
 - `app` -> `cassandra-2`
 - `app` -> `cassandra-3`
 
-O Compose publica a porta da aplicação para desenvolvimento HTTP local. Redis e Cassandra não têm portas publicadas no host por padrão; as verificações desses serviços são executadas através dos containers.
+O Compose publica portas locais em loopback para a aplicação, Redis e `cassandra-1`. `cassandra-2` e `cassandra-3` ficam acessíveis apenas dentro da rede Docker.
 
 ## Decisões Adiadas
 
@@ -179,7 +180,7 @@ O Compose publica a porta da aplicação para desenvolvimento HTTP local. Redis 
 - Busca da URL original e redirect.
 - Processo de inicialização do contador Redis.
 - Implementação do Base62.
-- Keyspace e tabelas Cassandra.
+- Tabelas Cassandra.
 - Consistency levels no Cassandra.
 - Cliente Cassandra e fronteiras de repository.
 - Validação definitiva de URL e contratos de API.

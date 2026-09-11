@@ -48,19 +48,30 @@ Start all services:
 docker compose up -d
 ```
 
+The long-running services use `restart: unless-stopped`, so they are expected to come back after a Docker Desktop restart as long as Docker itself is running.
+
 Stop services without deleting data:
 
 ```sh
 docker compose down
 ```
 
-Delete containers and volumes:
+Delete containers and local data:
 
 ```sh
 docker compose down --volumes
 ```
 
-The volume removal command deletes Redis and Cassandra local data. Use it only when resetting the local environment is intentional.
+Redis and Cassandra data live in local ignored bind mounts, not in the repository:
+
+```text
+.dockerized-redis/
+.dockerized-cassandra/cassandra-1/
+.dockerized-cassandra/cassandra-2/
+.dockerized-cassandra/cassandra-3/
+```
+
+Do not delete those directories unless resetting local data is intentional.
 
 ## Rebuild
 
@@ -171,9 +182,10 @@ docker compose logs -f app
 Redis uses:
 
 - image: `redis:7-alpine`
-- data volume: `redis_data`
+- data directory: `.dockerized-redis/`
 - AOF: enabled
 - fsync policy: `everysec`
+- host port: `127.0.0.1:6379`
 
 Check Redis health:
 
@@ -185,6 +197,12 @@ Expected result:
 
 ```text
 PONG
+```
+
+Check Redis from the host when `redis-cli` is available locally:
+
+```sh
+REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli -h 127.0.0.1 -p 6379 ping
 ```
 
 Redis is planned to generate IDs with `INCR url:id`, but this milestone does not initialize or mutate the counter.
@@ -199,10 +217,18 @@ The local Cassandra cluster uses three peer-to-peer nodes:
 
 `cassandra-1` is the seed node for topology discovery. Seed does not mean leader.
 
-Check CQL readiness:
+Authentication is enabled with Cassandra `PasswordAuthenticator`. The configured role and keyspace are created idempotently by `cassandra-init`. The keyspace uses `NetworkTopologyStrategy` with replication factor 3 in the configured datacenter.
+
+Only `cassandra-1` is published to the host, and only on loopback:
+
+```text
+127.0.0.1:9042:9042
+```
+
+Check CQL readiness through the same health check used by Docker:
 
 ```sh
-docker compose exec cassandra-1 cqlsh 127.0.0.1 9042 -e "DESCRIBE KEYSPACES;"
+docker compose exec cassandra-1 bash /usr/local/bin/url-shortener-cassandra-healthcheck
 ```
 
 Check cluster membership:
@@ -213,9 +239,23 @@ docker compose exec cassandra-1 nodetool status
 
 Each Cassandra node has its own volume:
 
-- `cassandra_data_1`
-- `cassandra_data_2`
-- `cassandra_data_3`
+- `.dockerized-cassandra/cassandra-1/`
+- `.dockerized-cassandra/cassandra-2/`
+- `.dockerized-cassandra/cassandra-3/`
+
+No Cassandra data directory is shared between nodes.
+
+For DBeaver, use:
+
+```text
+Host: localhost
+Port: 9042
+Datacenter: datacenter1
+Keyspace: value from CASSANDRA_KEYSPACE
+Authentication: username/password from the local environment
+```
+
+Cassandra still advertises Docker-internal peer addresses to drivers. A host client can connect through `localhost:9042`, but topology discovery may show peer addresses that are only reachable from inside the Docker network.
 
 The health check uses `cqlsh` against the local node. This verifies that CQL native transport is accepting requests, but a deeper topology check should still use `nodetool status`.
 
@@ -223,4 +263,4 @@ The health check uses `cqlsh` against the local node. This verifies that CQL nat
 
 All services join the same Compose bridge network and communicate through service names. No hardcoded container IPs are used.
 
-The Compose file does not publish service ports to the host by default. Commands are executed through containers to preserve the Docker-first workflow.
+The application, Redis, and `cassandra-1` publish loopback-only host ports for local development and administration. `cassandra-2` and `cassandra-3` are not published to the host.
