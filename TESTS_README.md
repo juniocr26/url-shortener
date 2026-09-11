@@ -1,6 +1,6 @@
 # Project Tests
 
-This project includes automated tests focused on the current backend foundation, Base62 encoding/decoding, and reversible short-code obfuscation used by the URL shortener.
+This project includes automated tests focused on the current backend foundation, HTTP contract, Base62 encoding/decoding, and reversible short-code obfuscation used by the URL shortener.
 
 The test suite is written with `pytest` and runs inside the Docker development environment.
 
@@ -26,7 +26,7 @@ docker compose exec app uv run pytest -x
 
 ## HTTP Tests
 
-The HTTP tests validate the current FastAPI application skeleton.
+The HTTP tests validate the current FastAPI HTTP contract and authentication behavior.
 
 Run only the HTTP test suite:
 
@@ -38,11 +38,13 @@ Current coverage includes:
 
 - OpenAPI availability
 - Basic Authentication requirement for `POST /urls`
-- Access to the protected URL creation endpoint
+- Access to the protected URL creation endpoint with valid credentials
 - Public access to `GET /{short_code}`
-- Current placeholder responses while the actual URL creation and resolution flows are still under development
+- Permanent HTTP redirect behavior for short-code resolution
+- `Location` header validation for HTTP redirects
+- Verification that the public short-code route does not require Basic Authentication
 
-These tests will evolve as Redis ID generation, Cassandra persistence, URL creation, and redirection are implemented.
+The URL creation and short-code resolution business logic will evolve as Redis ID generation and Cassandra persistence are implemented.
 
 ## Base62 Tests
 
@@ -148,7 +150,9 @@ The tests validate:
 - Rejection of obfuscated values longer than seven characters
 - Rejection of values outside the supported seven-character Base62 space
 
-The obfuscation tests use a temporary test value for `OBFUSCATING_KEY`. The test key is provided through Pytest's `monkeypatch` and does not depend on the real key configured in the project's local `.env`.
+The obfuscation tests use a temporary test value for `OBFUSCATING_KEY`.
+
+The test key is provided through Pytest's `monkeypatch` and does not depend on the real key configured in the project's local `.env`.
 
 The obfuscation mechanism is intended to hide sequential identifiers before exposing them as public short codes. It should not be treated as a replacement for cryptographic encryption when cryptographic confidentiality is required.
 
@@ -174,6 +178,12 @@ To run only the Basic Authentication requirement test:
 docker compose exec app uv run pytest tests/test_http_skeleton.py::test_create_url_requires_basic_auth -v
 ```
 
+To run only the short-code redirect test:
+
+```bash
+docker compose exec app uv run pytest tests/test_http_skeleton.py::test_resolve_short_code_is_public_and_redirects -v
+```
+
 This is useful when working on a specific behavior without running the entire suite.
 
 ## Test Structure
@@ -190,7 +200,7 @@ tests/
 
 ### `test_http_skeleton.py`
 
-Tests the current FastAPI HTTP contract and authentication behavior.
+Tests the current FastAPI HTTP contract, Basic Authentication behavior, public short-code route, and permanent redirect response.
 
 ### `test_base62.py`
 
@@ -247,8 +257,10 @@ The current test suite covers the implemented parts of the project:
 - FastAPI application availability
 - OpenAPI endpoint
 - Basic Authentication behavior
-- Public short-code route behavior
-- Current HTTP placeholders
+- Protected `POST /urls` route behavior
+- Public `GET /{short_code}` route behavior
+- Permanent `301 Moved Permanently` redirect behavior
+- Redirect `Location` header validation
 - Base62 encoding
 - Base62 decoding
 - Base62 round-trip validation
@@ -269,8 +281,8 @@ As the project evolves, additional tests are expected to cover:
 - Cassandra persistence
 - URL creation
 - Complete short-code generation flow
-- Short-code resolution
-- HTTP redirects
+- Short-code resolution backed by persisted data
+- Redirect behavior using URLs retrieved from persistence
 - Failure scenarios
 - Infrastructure integration behavior
 
@@ -284,5 +296,5 @@ These items represent planned coverage and should only be moved to the current c
 - Base62 tests do not require Redis or Cassandra.
 - Obfuscation tests do not require Redis or Cassandra.
 - Test-specific secrets are provided through Pytest and must not use production or local development secrets.
-- The current HTTP skeleton tests do not validate the final URL shortening behavior yet.
-- Placeholder assertions should be updated or removed when the real endpoint implementations replace the current `501 Not Implemented` responses.
+- The current HTTP tests validate the route contract, authentication behavior, and redirect response, but do not yet validate the complete Redis and Cassandra-backed URL shortening flow.
+- Redirect tests may use controlled test data until short-code resolution is connected to persistent storage.

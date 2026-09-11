@@ -1,35 +1,30 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, Path
 
+from app.controllers.url_controller import (
+    create_url,
+    resolve_url,
+)
 from app.core.security import require_basic_auth
 from app.schemas import CreateUrlRequest
+
 
 router = APIRouter()
 
 
-@router.post("/urls")
-def create_short_url(
-    _payload: CreateUrlRequest,
-    _authenticated: Annotated[None, Depends(require_basic_auth)],
-) -> None:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail=(
-            "URL creation is not implemented yet. The HTTP route and Basic "
-            "Authentication skeleton are in place."
-        ),
-    )
+@router.post(
+    "/urls",
+    dependencies=[Depends(require_basic_auth)],
+)
+def create_url_route(
+    payload: CreateUrlRequest,
+):
+    return create_url(payload)
 
 
 @router.get("/{short_code}")
-def resolve_short_url(
+def resolve_url_route(
     short_code: Annotated[str, Path(min_length=1)],
-) -> None:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "message": "Short URL resolution is not implemented yet.",
-            "short_code": short_code,
-        },
-    )
+):
+    return resolve_url(short_code)
