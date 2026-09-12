@@ -10,19 +10,21 @@ The project avoids extra architectural layers so the runtime behavior can be exp
 
 ```mermaid
 flowchart LR
-    client[Client]
-    app[FastAPI app]
-    redis[Redis<br/>AOF persistence]
-    c1[cassandra-1<br/>seed, not leader]
-    c2[cassandra-2]
-    c3[cassandra-3]
+    client["Client"]
+    app["FastAPI app"]
+    redis["Redis<br/>AOF persistence"]
+    c1["cassandra-1<br/>seed, not leader"]
+    c2["cassandra-2"]
+    c3["cassandra-3"]
 
-    client -->|POST /urls<br/>Basic Auth| app
-    client -->|GET /{short_code}<br/>public| app
+    client -->|"POST /urls<br/>Basic Auth"| app
+    client -->|"GET /{short_code}<br/>public"| app
+
     app --> redis
     app --> c1
     app --> c2
     app --> c3
+
     c1 --- c2
     c2 --- c3
     c1 --- c3

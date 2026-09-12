@@ -10,19 +10,21 @@ A arquitetura evita camadas desnecessárias para que o comportamento do sistema 
 
 ```mermaid
 flowchart LR
-    client[Cliente]
-    app[Aplicação FastAPI]
-    redis[Redis<br/>persistência AOF]
-    c1[cassandra-1<br/>seed, não líder]
-    c2[cassandra-2]
-    c3[cassandra-3]
+    client["Cliente"]
+    app["Aplicação FastAPI"]
+    redis["Redis<br/>persistência AOF"]
+    c1["cassandra-1<br/>seed, não líder"]
+    c2["cassandra-2"]
+    c3["cassandra-3"]
 
-    client -->|POST /urls<br/>Basic Auth| app
-    client -->|GET /{short_code}<br/>público| app
+    client -->|"POST /urls<br/>Basic Auth"| app
+    client -->|"GET /{short_code}<br/>público"| app
+
     app --> redis
     app --> c1
     app --> c2
     app --> c3
+
     c1 --- c2
     c2 --- c3
     c1 --- c3
