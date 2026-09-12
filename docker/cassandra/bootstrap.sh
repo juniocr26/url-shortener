@@ -160,10 +160,36 @@ with open(os.environ["CQL_FILE"], "w", encoding="utf-8") as cql:
 PY
 }
 
+write_schema_cql() {
+  local path="$1"
+
+  CQL_FILE="$path" python3 <<'PY'
+import os
+
+
+def quote_identifier(value: str) -> str:
+    if not value:
+        raise SystemExit("Cassandra keyspace name must not be empty")
+    return '"' + value.replace('"', '""') + '"'
+
+
+keyspace = quote_identifier(os.environ["CASSANDRA_KEYSPACE"])
+
+with open(os.environ["CQL_FILE"], "w", encoding="utf-8") as cql:
+    cql.write(
+        f"CREATE TABLE IF NOT EXISTS {keyspace}.urls_by_id ("
+        "id bigint PRIMARY KEY, "
+        "original_url text"
+        ");\n"
+    )
+PY
+}
+
 role_create_cql="$(mktemp)"
 role_update_cql="$(mktemp)"
 keyspace_cql="$(mktemp)"
-trap 'rm -f "$role_create_cql" "$role_update_cql" "$keyspace_cql"' EXIT
+schema_cql="$(mktemp)"
+trap 'rm -f "$role_create_cql" "$role_update_cql" "$keyspace_cql" "$schema_cql"' EXIT
 
 if ! can_connect "$CASSANDRA_USERNAME" "$CASSANDRA_PASSWORD"; then
   write_role_cql "$role_create_cql"
@@ -192,4 +218,10 @@ if ! run_cql_file "$CASSANDRA_USERNAME" "$CASSANDRA_PASSWORD" "$keyspace_cql"; t
   exit 1
 fi
 
-echo "Cassandra authentication and keyspace bootstrap completed."
+write_schema_cql "$schema_cql"
+if ! run_cql_file "$CASSANDRA_USERNAME" "$CASSANDRA_PASSWORD" "$schema_cql"; then
+  echo "Failed to create or update the URL persistence table." >&2
+  exit 1
+fi
+
+echo "Cassandra authentication, keyspace, and URL table bootstrap completed."

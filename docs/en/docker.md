@@ -2,190 +2,140 @@
 
 ## Philosophy
 
-This project uses a Docker-first development workflow. The host machine should mainly provide:
+This project is Docker-first. The host machine should mainly provide:
 
 - Git
 - Docker
 - Docker Compose
 
-Python 3.14, `uv`, FastAPI, Uvicorn, Redis, Cassandra, and project-specific commands should run inside containers whenever technically applicable.
-
-This avoids making the host Python installation part of the operational requirements for the project.
+Python 3.14, `uv`, FastAPI, Redis, Cassandra, and project commands are expected to run inside containers whenever possible.
 
 ## Environment Files
 
-`.env.example` is the public configuration contract. `.env` is local, private, ignored by Git, and consumed by Docker Compose through environment interpolation.
+`.env.example` is the public configuration contract. `.env` is local, private, ignored by Git, and consumed by Docker Compose.
 
-Create a local `.env` from the public example:
+Create a local file:
 
 ```sh
 cp .env.example .env
 ```
 
-Do not commit `.env`, credentials, tokens, or private keys.
+Fill local values for:
 
-`POST /urls` requires `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD` in the local `.env`. Keep real values private and do not place them in documentation.
+- `BASIC_AUTH_USERNAME`
+- `BASIC_AUTH_PASSWORD`
+- `OBFUSCATING_KEY`
+- `CASSANDRA_USERNAME`
+- `CASSANDRA_PASSWORD`
+- optional `REDIS_PASSWORD`
 
-## Build
+Do not commit `.env` or real secret values.
+
+## Build and Start
+
+Validate Compose interpolation and service definitions:
+
+```sh
+docker compose config
+```
+
+Build the application image:
 
 ```sh
 docker compose build
 ```
 
-The application image uses a multi-stage Dockerfile:
-
-- `uv` stage: provides the `uv` and `uvx` binaries.
-- `build` stage: resolves and installs project dependencies into `/opt/venv`.
-- `runtime` stage: contains Python, `uv`, the virtual environment, and project files, without build-only layers from the dependency stage.
-
-Dependency files are copied before the rest of the project so normal code changes do not unnecessarily invalidate dependency layers.
-
-## Start and Stop
-
-Start all services:
+Start the full stack:
 
 ```sh
 docker compose up -d
 ```
 
-The long-running services use `restart: unless-stopped`, so they are expected to come back after a Docker Desktop restart as long as Docker itself is running.
+The `app` service depends on:
 
-Stop services without deleting data:
+- healthy Redis;
+- completed Cassandra bootstrap.
 
-```sh
-docker compose down
-```
+Cassandra bootstrap waits for the three Cassandra nodes to become healthy, creates or updates the configured role and keyspace, and creates the `urls_by_id` table if it does not already exist.
 
-Delete containers and local data:
-
-```sh
-docker compose down --volumes
-```
-
-Redis and Cassandra data live in local ignored bind mounts, not in the repository:
-
-```text
-.dockerized-redis/
-.dockerized-cassandra/cassandra-1/
-.dockerized-cassandra/cassandra-2/
-.dockerized-cassandra/cassandra-3/
-```
-
-Do not delete those directories unless resetting local data is intentional.
-
-## Rebuild
-
-Rebuild images and start the stack:
-
-```sh
-docker compose up -d --build
-```
-
-Rebuild the application image without cache:
-
-```sh
-docker compose build --no-cache app
-```
-
-## Application Container
-
-The `app` service runs the FastAPI skeleton with Uvicorn. In Docker Compose it uses `--reload` for local development, with the source code mounted into the container.
-
-The API is published to the host on `APP_PORT`, which defaults to `8000`:
-
-```text
-http://localhost:8000
-```
-
-Automatic OpenAPI documentation is available at:
-
-```text
-http://localhost:8000/docs
-```
-
-Run Python:
-
-```sh
-docker compose run --rm --no-deps app python --version
-```
-
-Run `uv`:
-
-```sh
-docker compose run --rm --no-deps app uv --version
-```
-
-Synchronize dependencies inside Docker:
-
-```sh
-docker compose run --rm --no-deps app uv sync --frozen
-```
-
-Run tests:
-
-```sh
-docker compose run --rm --no-deps app uv run pytest
-```
-
-Open a shell:
-
-```sh
-docker compose run --rm --no-deps app sh
-```
-
-If the stack is already running, you can also use:
-
-```sh
-docker compose exec app sh
-```
-
-Check the public route placeholder:
-
-```sh
-curl -i http://localhost:8000/abc123
-```
-
-Check unauthenticated `POST /urls`:
-
-```sh
-curl -i -X POST http://localhost:8000/urls -H 'Content-Type: application/json' -d '{"url":"https://example.com"}'
-```
-
-Check authenticated `POST /urls` with local private credentials:
-
-```sh
-curl -i -u "$BASIC_AUTH_USERNAME:$BASIC_AUTH_PASSWORD" -X POST http://localhost:8000/urls -H 'Content-Type: application/json' -d '{"url":"https://example.com"}'
-```
-
-## Logs and Health
-
-Show container status and health:
+Check service health:
 
 ```sh
 docker compose ps
 ```
 
-Follow all logs:
+## Application
 
-```sh
-docker compose logs -f
+The application runs Uvicorn with reload enabled for local development. Source code is bind-mounted into `/app`.
+
+Default URL:
+
+```text
+http://localhost:8000
 ```
 
-Follow one service:
+OpenAPI:
+
+```text
+http://localhost:8000/docs
+```
+
+Create a URL:
 
 ```sh
-docker compose logs -f app
+curl -i \
+  -u "$BASIC_AUTH_USERNAME:$BASIC_AUTH_PASSWORD" \
+  -X POST http://localhost:8000/urls \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com/docs"}'
 ```
+
+Resolve a URL without authentication:
+
+```sh
+curl -i --max-redirs 0 http://localhost:8000/<short_code>
+```
+
+`GET /{short_code}` should not send or require Basic Auth.
+
+## Tests
+
+Run all tests inside the running application container:
+
+```sh
+docker compose exec app uv run pytest
+```
+
+Verbose output:
+
+```sh
+docker compose exec app uv run pytest -v
+```
+
+Stop on first failure:
+
+```sh
+docker compose exec app uv run pytest -x
+```
+
+Run an individual file:
+
+```sh
+docker compose exec app uv run pytest tests/test_http.py
+```
+
+The default test suite uses fakes for Redis and Cassandra behavior. It does not require live infrastructure for every test case.
 
 ## Redis
 
 Redis uses:
 
-- image: `redis:7-alpine`
-- data directory: `.dockerized-redis/`
-- AOF: enabled
-- fsync policy: `everysec`
-- host port: `127.0.0.1:6379`
+- image: `redis:7-alpine`;
+- data directory: `.dockerized-redis/`;
+- AOF enabled;
+- `appendfsync everysec`;
+- optional password from `REDIS_PASSWORD`;
+- host port `127.0.0.1:6379`.
 
 Check Redis health:
 
@@ -199,33 +149,31 @@ Expected result:
 PONG
 ```
 
-Check Redis from the host when `redis-cli` is available locally:
+Redis generates URL IDs with atomic `INCR`. The application initializes the counter with `SET ... NX` so existing persisted counter state is not overwritten.
 
-```sh
-REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli -h 127.0.0.1 -p 6379 ping
-```
-
-Redis is planned to generate IDs with `INCR url:id`, but this milestone does not initialize or mutate the counter.
+Redis AOF improves durability, but it is not failover or high availability.
 
 ## Cassandra
 
-The local Cassandra cluster uses three peer-to-peer nodes:
+The local Cassandra cluster has three peer-to-peer nodes:
 
 - `cassandra-1`
 - `cassandra-2`
 - `cassandra-3`
 
-`cassandra-1` is the seed node for topology discovery. Seed does not mean leader.
+`cassandra-1` is the seed node for discovery. Seed does not mean leader.
 
-Authentication is enabled with Cassandra `PasswordAuthenticator`. The configured role and keyspace are created idempotently by `cassandra-init`. The keyspace uses `NetworkTopologyStrategy` with replication factor 3 in the configured datacenter.
+Authentication uses Cassandra `PasswordAuthenticator`. The configured role, keyspace, and URL table are initialized idempotently by `cassandra-init`.
 
-Only `cassandra-1` is published to the host, and only on loopback:
+The keyspace uses `NetworkTopologyStrategy` with replication factor 3 in the configured datacenter, defaulting to `datacenter1`.
+
+Only `cassandra-1` is published to the host:
 
 ```text
 127.0.0.1:9042:9042
 ```
 
-Check CQL readiness through the same health check used by Docker:
+Check CQL readiness:
 
 ```sh
 docker compose exec cassandra-1 bash /usr/local/bin/url-shortener-cassandra-healthcheck
@@ -237,7 +185,7 @@ Check cluster membership:
 docker compose exec cassandra-1 nodetool status
 ```
 
-Each Cassandra node has its own volume:
+Each node has its own ignored local data directory:
 
 - `.dockerized-cassandra/cassandra-1/`
 - `.dockerized-cassandra/cassandra-2/`
@@ -245,22 +193,18 @@ Each Cassandra node has its own volume:
 
 No Cassandra data directory is shared between nodes.
 
-For DBeaver, use:
+## Stop and Reset
 
-```text
-Host: localhost
-Port: 9042
-Datacenter: datacenter1
-Keyspace: value from CASSANDRA_KEYSPACE
-Authentication: username/password from the local environment
+Stop services without deleting data:
+
+```sh
+docker compose down
 ```
 
-Cassandra still advertises Docker-internal peer addresses to drivers. A host client can connect through `localhost:9042`, but topology discovery may show peer addresses that are only reachable from inside the Docker network.
+Delete containers and local Docker volumes:
 
-The health check uses `cqlsh` against the local node. This verifies that CQL native transport is accepting requests, but a deeper topology check should still use `nodetool status`.
+```sh
+docker compose down --volumes
+```
 
-## Docker Network
-
-All services join the same Compose bridge network and communicate through service names. No hardcoded container IPs are used.
-
-The application, Redis, and `cassandra-1` publish loopback-only host ports for local development and administration. `cassandra-2` and `cassandra-3` are not published to the host.
+The Redis and Cassandra bind-mounted data directories are not deleted by normal `docker compose down`. Delete them only when a local data reset is intentional.

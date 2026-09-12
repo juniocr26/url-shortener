@@ -47,6 +47,11 @@ services:
     tty: true
     stdin_open: true
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
     networks:
       - backend
     ports:
@@ -70,6 +75,8 @@ services:
       CASSANDRA_DATACENTER: ${CASSANDRA_DATACENTER:-datacenter1}
       SHORT_URL_BASE: ${SHORT_URL_BASE:-http://localhost:8000}
       URL_ID_START: ${URL_ID_START:-14776336}
+      BASE62_ALPHABET: ${BASE62_ALPHABET:-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz}
+      OBFUSCATING_KEY: ${OBFUSCATING_KEY:-}
       BASIC_AUTH_USERNAME: ${BASIC_AUTH_USERNAME:-}
       BASIC_AUTH_PASSWORD: ${BASIC_AUTH_PASSWORD:-}
     healthcheck:

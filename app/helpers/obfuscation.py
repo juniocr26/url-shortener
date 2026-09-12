@@ -1,7 +1,7 @@
 import hashlib
 import math
-import os
 
+from app.core.config import get_settings
 from app.helpers.base62 import decode_base62, encode_base62
 
 
@@ -10,11 +10,17 @@ BASE = 62
 MODULUS = BASE**BASE62_LENGTH
 
 
+class ObfuscationConfigurationError(RuntimeError):
+    pass
+
+
 def _get_key() -> str:
-    key = os.getenv("OBFUSCATING_KEY")
+    key = get_settings().obfuscating_key
 
     if not key:
-        raise RuntimeError("OBFUSCATING_KEY is not configured.")
+        raise ObfuscationConfigurationError(
+            "OBFUSCATING_KEY is not configured."
+        )
 
     return key
 

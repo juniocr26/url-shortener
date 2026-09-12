@@ -1,17 +1,30 @@
 import pytest
 
+from app.core.config import get_settings
 from app.helpers.obfuscation import (
     deobfuscate_base62,
     obfuscate_base62,
 )
 
 
+def set_obfuscating_key(
+    monkeypatch: pytest.MonkeyPatch,
+    key: str,
+) -> None:
+    monkeypatch.setenv("OBFUSCATING_KEY", key)
+    get_settings.cache_clear()
+
+
 @pytest.fixture(autouse=True)
 def obfuscating_key_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv(
-        "OBFUSCATING_KEY",
+    set_obfuscating_key(
+        monkeypatch,
         "test-obfuscating-key-for-url-shortener",
     )
+
+    yield
+
+    get_settings.cache_clear()
 
 
 @pytest.mark.parametrize(
@@ -67,17 +80,11 @@ def test_different_values_produce_different_results() -> None:
 def test_different_keys_produce_different_results(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv(
-        "OBFUSCATING_KEY",
-        "first-test-key",
-    )
+    set_obfuscating_key(monkeypatch, "first-test-key")
 
     first = obfuscate_base62("10000")
 
-    monkeypatch.setenv(
-        "OBFUSCATING_KEY",
-        "second-test-key",
-    )
+    set_obfuscating_key(monkeypatch, "second-test-key")
 
     second = obfuscate_base62("10000")
 
@@ -89,17 +96,11 @@ def test_deobfuscation_with_wrong_key_does_not_restore_original(
 ) -> None:
     original = "10000"
 
-    monkeypatch.setenv(
-        "OBFUSCATING_KEY",
-        "correct-test-key",
-    )
+    set_obfuscating_key(monkeypatch, "correct-test-key")
 
     obfuscated = obfuscate_base62(original)
 
-    monkeypatch.setenv(
-        "OBFUSCATING_KEY",
-        "wrong-test-key",
-    )
+    set_obfuscating_key(monkeypatch, "wrong-test-key")
 
     restored = deobfuscate_base62(obfuscated)
 

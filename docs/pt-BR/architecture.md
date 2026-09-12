@@ -2,31 +2,27 @@
 
 ## Propósito
 
-`url-shortener` é um projeto backend voltado a aprendizado e portfólio, com foco em encurtamento de URLs, decisões de arquitetura e fundamentos de sistemas distribuídos.
+`url-shortener` é um projeto backend de portfólio com foco em desenho de sistemas. Ele implementa um encurtador de URLs com criação autenticada, resolução pública, geração de IDs no Redis, persistência no Cassandra, codificação Base62 e ofuscação reversível do código público.
 
-Esta etapa cria a infraestrutura local e um esqueleto HTTP mínimo com FastAPI. Ela não implementa criação real de URL curta, redirects, Base62, inicialização do contador Redis, schema Cassandra, repositories ou regras de negócio.
+A arquitetura evita camadas desnecessárias para que o comportamento do sistema seja direto de explicar em uma entrevista técnica.
 
-## Arquitetura Atual
-
-O sistema atual é um ambiente Docker Compose com uma aplicação FastAPI, um Redis e um cluster Cassandra local com três nós.
+## Componentes em Execução
 
 ```mermaid
 flowchart LR
-    subgraph network[Docker bridge network]
-        client[Client]
-        app[app<br/>FastAPI + Uvicorn]
-        redis[redis<br/>persistencia AOF]
-        c1[cassandra-1<br/>seed]
-        c2[cassandra-2]
-        c3[cassandra-3]
-    end
+    client[Cliente]
+    app[Aplicação FastAPI]
+    redis[Redis<br/>persistência AOF]
+    c1[cassandra-1<br/>seed, não líder]
+    c2[cassandra-2]
+    c3[cassandra-3]
 
     client -->|POST /urls<br/>Basic Auth| app
-    client -->|GET /short_code<br/>publico| app
-    app -. planejado .-> redis
-    app -. planejado .-> c1
-    app -. planejado .-> c2
-    app -. planejado .-> c3
+    client -->|GET /{short_code}<br/>público| app
+    app --> redis
+    app --> c1
+    app --> c2
+    app --> c3
     c1 --- c2
     c2 --- c3
     c1 --- c3
@@ -34,154 +30,186 @@ flowchart LR
 
 Componentes implementados:
 
-- `app`: container Python 3.14 com `uv`, usado como ambiente principal de desenvolvimento.
-- Esqueleto FastAPI servido por Uvicorn.
-- Rota `POST /urls` protegida por HTTP Basic Authentication.
-- Rota pública `GET /{short_code}`.
-- Documentação OpenAPI automática gerada pelo FastAPI.
-- `redis`: Redis 7 com persistência append-only file.
-- `cassandra-1`, `cassandra-2`, `cassandra-3`: nós Cassandra 5.0 no mesmo cluster local.
-- Bind mounts locais para Redis e para cada nó Cassandra.
-- Autenticação Cassandra por senha e bootstrap do keyspace configurado.
-- Health checks para sinais de prontidão dos serviços.
-- Descoberta de serviços por DNS usando os nomes do Docker Compose.
+- Aplicação FastAPI servida por Uvicorn.
+- Organização em rota, controller e serviço.
+- Basic Authentication em nível de rota para `POST /urls`.
+- Rota pública `GET /{short_code}`, sem dependência de autenticação.
+- Cliente Redis reaproveitado pelo lifespan do FastAPI.
+- Cluster/session Cassandra reaproveitados pelo lifespan do FastAPI.
+- Gerador de IDs Redis usando `SET ... NX` para inicialização não destrutiva e `INCR` para IDs atômicos.
+- Store Cassandra usando a tabela `urls_by_id`.
+- Ambiente Docker Compose com um Redis e três nós Cassandra.
+- Bootstrap Cassandra idempotente para role, keyspace e tabela de URLs.
 
-As rotas HTTP implementadas retornam placeholders explícitos com `501 Not Implemented`. Redis e Cassandra estão disponíveis na infraestrutura, mas ainda não são usados pelas rotas.
-
-## Esqueleto HTTP Atual
-
-```mermaid
-flowchart LR
-    client[Client]
-    post[POST /urls]
-    auth[Basic Auth]
-    post_placeholder[501 placeholder]
-    get[GET /{short_code}]
-    get_placeholder[501 placeholder]
-
-    client --> post --> auth --> post_placeholder
-    client --> get --> get_placeholder
-```
-
-`POST /urls` exige Basic Auth porque a criação de URL é tratada como operação administrativa nesta etapa. `GET /{short_code}` é público de propósito, já que a resolução futura de short URLs não deve exigir credenciais.
-
-## Fluxo Planejado da Aplicação
-
-Fluxo futuro de escrita:
+## Fluxo do POST
 
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant App as Application
+    participant Cliente
+    participant App as Aplicação FastAPI
     participant Redis
     participant Cassandra
 
-    Client->>App: POST original URL
-    App->>Redis: INCR url:id
-    Redis-->>App: ID numerico
-    App->>App: codificar ID com Base62
-    App->>Cassandra: salvar short code e URL original
-    Cassandra-->>App: escrita confirmada
-    App-->>Client: short URL
+    Cliente->>App: POST /urls com Basic Auth
+    App->>App: Validar URL da requisição
+    App->>Redis: SET contador start-1 NX, depois INCR
+    Redis-->>App: ID inteiro
+    App->>App: Codificar ID em Base62
+    App->>App: Ofuscar Base62 em 7 caracteres
+    App->>Cassandra: Salvar ID -> URL original
+    Cassandra-->>App: Escrita confirmada
+    App-->>Cliente: 201 Created com short_code e short_url
 ```
 
-Fluxo futuro de leitura:
+`POST /urls` exige `BASIC_AUTH_USERNAME` e `BASIC_AUTH_PASSWORD`. A autenticação usa `HTTPBasic` do FastAPI e comparação em tempo constante com `secrets.compare_digest`.
+
+O corpo da resposta é:
+
+```json
+{
+  "short_code": "<código-de-7-caracteres>",
+  "short_url": "<SHORT_URL_BASE>/<código-de-7-caracteres>"
+}
+```
+
+Cada POST válido cria um novo ID. A implementação não faz deduplicação de URLs e não define expiração ou TTL.
+
+## Fluxo do GET
 
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant App as Application
+    participant Cliente
+    participant App as Aplicação FastAPI
     participant Cassandra
 
-    Client->>App: GET /{short_code}
-    App->>Cassandra: buscar URL original
+    Cliente->>App: GET /{short_code}
+    App->>App: Desofuscar código público
+    App->>App: Decodificar Base62 para ID inteiro
+    App->>Cassandra: Buscar pelo ID
     Cassandra-->>App: URL original
-    App-->>Client: HTTP redirect
+    App-->>Cliente: 301 Moved Permanently
 ```
 
-## Redis
+`GET /{short_code}` é público de propósito. Ele deve funcionar sem usuário, senha ou header `Authorization`. Em caso de sucesso, a resposta usa `301 Moved Permanently` com a URL original no header `Location`.
 
-O Redis será usado futuramente para gerar IDs numéricos de forma atômica com `INCR`, conceitualmente em uma chave como `url:id`. Isso evita locks manuais em requisições concorrentes, porque o incremento é atômico dentro do Redis. As rotas FastAPI atuais ainda não usam Redis.
+Um `301` comunica redirecionamento permanente e pode ser cacheado de forma agressiva por navegadores e outros clientes. Por isso, trocar o destino de um código já emitido não é um comportamento suportado de forma confiável.
 
-O primeiro ID planejado é:
+Códigos malformados ou desconhecidos retornam `404 Not Found`. Falhas de consulta no Cassandra retornam `503 Service Unavailable`.
+
+## Geração de IDs no Redis
+
+O Redis é responsável por gerar IDs inteiros de forma atômica.
+
+O primeiro ID gerado deve ser:
 
 ```text
 62^4 = 14.776.336
 ```
 
-Se o primeiro `INCR` deve retornar `14.776.336`, o valor anterior armazenado no contador precisa ser `14.776.335`.
+O contador Redis é inicializado com:
 
-Esta etapa não inicializa essa chave. Essa inicialização deve ser implementada depois sem resetar de forma destrutiva um contador persistido a cada inicialização do Redis.
+```text
+14.776.335
+```
 
-Persistência do Redis:
+Assim, o primeiro `INCR` retorna `14.776.336`, que codifica para `10000` com o alfabeto Base62 configurado.
 
-- AOF está habilitado com `appendfsync everysec`.
-- Os dados ficam em `.dockerized-redis/`.
-- Restarts preservam o estado local enquanto esse diretório for mantido.
-- Essa configuração local não promete perda zero de dados; com `appendfsync everysec`, escritas muito recentes ainda podem estar em risco em uma falha brusca.
+A inicialização usa `SET contador start-1 NX`, então um contador já persistido não é sobrescrito. O gerador inicializa uma vez por instância da aplicação e depois usa `INCR` a cada nova URL.
 
-## Base62
+O Redis está com AOF habilitado e `appendfsync everysec`. AOF é um mecanismo de durabilidade, não de alta disponibilidade. Ele não fornece failover. Se o Redis perder estado já confirmado do contador enquanto o Cassandra mantiver linhas gravadas com IDs maiores, reutilização de ID pode se tornar um problema de corretude.
 
-Base62 está planejado como a transformação do ID numérico para o short code. Esta etapa não escolhe hash, criptografia, IDs aleatórios, UUIDs, Snowflake, permutação reversível ou estratégia de ofuscação.
+## Base62 e Ofuscação
 
-## Cassandra
+Base62 usa o alfabeto:
 
-Cassandra foi incluído para estudar conceitos como distribuição, replicação, consistency levels, disponibilidade e escalabilidade horizontal. As rotas FastAPI atuais ainda não leem nem escrevem no Cassandra.
+```text
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+```
 
-O cluster local possui três nós peer-to-peer:
+A propriedade essencial é:
+
+```text
+decode_base62(encode_base62(value)) == value
+```
+
+Antes de expor o código publicamente, o valor Base62 passa por uma ofuscação reversível e vira exatamente sete caracteres Base62. A operação inversa recupera o valor Base62 original:
+
+```text
+deobfuscate_base62(obfuscate_base62(value)) == value
+```
+
+A chave de ofuscação vem de `OBFUSCATING_KEY`. Ela não deve ser commitada nem documentada com valor real. Essa camada esconde IDs sequenciais nas URLs públicas, mas é ofuscação, não criptografia forte.
+
+O espaço de códigos públicos é:
+
+```text
+62^7 = 3.521.614.606.208
+```
+
+## Persistência no Cassandra
+
+O Cassandra armazena o modelo de consulta necessário para a aplicação:
+
+```text
+ID inteiro -> URL original
+```
+
+A tabela é:
+
+```sql
+CREATE TABLE IF NOT EXISTS urls_by_id (
+    id bigint PRIMARY KEY,
+    original_url text
+);
+```
+
+Para resolver um código público, a aplicação desfaz a ofuscação, decodifica o Base62 para o ID inteiro e consulta o Cassandra pela chave primária.
+
+O cluster local tem três nós peer-to-peer:
 
 - `cassandra-1`
 - `cassandra-2`
 - `cassandra-3`
 
-`cassandra-1` é configurado como seed node. Um seed node ajuda outros nós a descobrirem a topologia do cluster. Ele não é leader, master, primary, fonte única de verdade ou coordenador permanente. Em Cassandra, o papel de coordenador depende da requisição e do roteamento feito pelo driver.
+`cassandra-1` é o seed node para descoberta. Ele não é líder, primary, master, fonte única de verdade ou coordenador permanente. Qualquer nó Cassandra apropriado pode coordenar uma requisição.
 
-```mermaid
-flowchart TD
-    driver[Cassandra driver]
-    driver --> c1[cassandra-1<br/>seed, nao leader]
-    driver --> c2[cassandra-2]
-    driver --> c3[cassandra-3]
-    c1 --- c2
-    c2 --- c3
-    c1 --- c3
-```
+O keyspace configurado usa `NetworkTopologyStrategy` com fator de replicação 3 em `datacenter1`. Com três nós locais e RF=3, cada linha é replicada para os três nós desse datacenter.
 
-Cada nó Cassandra possui persistência independente:
+## Ciclo de Vida das Conexões
 
-- `cassandra-1` -> `.dockerized-cassandra/cassandra-1/`
-- `cassandra-2` -> `.dockerized-cassandra/cassandra-2/`
-- `cassandra-3` -> `.dockerized-cassandra/cassandra-3/`
+O lifespan do FastAPI cria recursos reutilizáveis no startup:
 
-Nenhum diretório de dados é compartilhado entre os nós.
+- um cliente Redis;
+- um gerador de IDs Redis;
+- um par cluster/session Cassandra;
+- um store Cassandra de URLs.
 
-## Replicação
+No shutdown, o lifespan fecha os recursos Redis e Cassandra. A aplicação não cria uma conexão Redis ou uma session Cassandra nova a cada requisição.
 
-O keyspace configurado é criado no bootstrap com replication factor 3 em um datacenter local, usando `NetworkTopologyStrategy` e o nome do datacenter configurado.
+O Docker Compose usa health checks e dependências entre serviços para prontidão. O startup não depende de sleeps arbitrários.
 
-Com três nós e RF=3, cada linha deve ser replicada nos três nós daquele datacenter. Isso é útil para estudar disponibilidade e tradeoffs de consistência, mas não prova por si só throughput ou escalabilidade de produção.
+## Tratamento de Falhas
 
-Nenhuma tabela da aplicação é criada nesta etapa porque os access patterns e o modelo de dados ainda não foram decididos.
+As falhas esperadas são tratadas explicitamente:
 
-## Networking Docker
+- entrada inválida no POST: erro de validação FastAPI/Pydantic;
+- credenciais ausentes ou inválidas no POST: `401 Unauthorized` com `WWW-Authenticate: Basic`;
+- código curto desconhecido ou malformado: `404 Not Found`;
+- falha na geração de ID no Redis: `503 Service Unavailable`;
+- falha de persistência ou consulta no Cassandra: `503 Service Unavailable`;
+- configuração obrigatória ausente para encurtamento: `500 Internal Server Error`.
 
-Os serviços se comunicam pela bridge network do Compose usando nomes DNS:
+As respostas para clientes não expõem credenciais, hostnames internos, detalhes de topologia, stack traces ou valores secretos de configuração.
 
-- `app` -> `redis`
-- `app` -> `cassandra-1`
-- `app` -> `cassandra-2`
-- `app` -> `cassandra-3`
+## Estratégia de Testes
 
-O Compose publica portas locais em loopback para a aplicação, Redis e `cassandra-1`. `cassandra-2` e `cassandra-3` ficam acessíveis apenas dentro da rede Docker.
+A suíte padrão usa fakes para os comportamentos de Redis e Cassandra, mantendo os testes unitários e de API determinísticos e rápidos. Ela cobre:
 
-## Decisões Adiadas
+- autenticação HTTP e comportamento do redirecionamento público;
+- pipeline de criação e resolução de URLs;
+- inicialização e incremento do contador Redis;
+- comportamento do store Cassandra;
+- codificação/decodificação Base62;
+- ofuscação reversível.
 
-- Comportamento real de criação de URL curta.
-- Busca da URL original e redirect.
-- Processo de inicialização do contador Redis.
-- Implementação do Base62.
-- Tabelas Cassandra.
-- Consistency levels no Cassandra.
-- Cliente Cassandra e fronteiras de repository.
-- Validação definitiva de URL e contratos de API.
-- Configuração de linters e formatters.
+O comportamento com Redis e Cassandra reais é validado por configuração Docker Compose e verificações manuais ou de integração, não por todos os testes unitários padrão.
