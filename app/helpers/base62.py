@@ -1,11 +1,5 @@
 from app.core.config import get_settings
 
-
-DEFAULT_BASE62_ALPHABET = (
-    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-)
-
-
 def _get_alphabet() -> str:
     alphabet = get_settings().base62_alphabet
 
