@@ -1,5 +1,7 @@
 # Postman Collection
 
+[English](README.md) | [Português](README.pt-BR.md)
+
 This directory contains the Postman collection for interacting with the URL Shortener API during local development.
 
 ## Collection

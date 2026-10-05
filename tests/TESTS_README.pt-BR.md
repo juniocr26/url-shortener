@@ -1,5 +1,7 @@
 # Testes do Projeto
 
+[English](TESTS_README.md) | [Português](TESTS_README.pt-BR.md)
+
 Este diretório contém a suíte automatizada do backend implementado do encurtador de URLs.
 
 A suíte usa `pytest` e deve rodar dentro do container da aplicação.

@@ -1,5 +1,7 @@
 # url-shortener
 
+[English](README.md) | [Português](README.pt-BR.md)
+
 `url-shortener` é um projeto de portfólio de Backend/System Design com abordagem Docker-first que implementa a criação de URLs encurtadas e a resolução pública de redirecionamentos utilizando FastAPI, Redis, Cassandra, codificação Base62 e ofuscação reversível de códigos curtos.
 
 O projeto foi intencionalmente mantido pequeno o suficiente para ser explicado em uma entrevista, ao mesmo tempo em que aborda preocupações reais de backend: operações de escrita autenticadas, leituras públicas, geração atômica de IDs, armazenamento persistente, infraestrutura conteinerizada e testes automatizados.
@@ -209,6 +211,8 @@ Consulte [tests/TESTS_README.md](tests/TESTS_README.md) para o guia completo de 
 - [Arquitetura em português](docs/pt-BR/architecture.md)
 - [Docker em português](docs/pt-BR/docker.md)
 - [Guia de testes em português](tests/TESTS_README.pt-BR.md)
+
+[Decisões de arquitetura e trade-offs](docs/pt-BR/architecture.md#decisões-de-arquitetura-e-trade-offs)
 
 ## Trade-offs
 

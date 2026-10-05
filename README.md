@@ -1,5 +1,7 @@
 # url-shortener
 
+[English](README.md) | [Português](README.pt-BR.md)
+
 `url-shortener` is a Docker-first backend/system-design portfolio project that implements URL creation and public redirect resolution with FastAPI, Redis, Cassandra, Base62 encoding, and reversible short-code obfuscation.
 
 The project is intentionally small enough to explain in an interview while still exercising real backend concerns: authenticated writes, public reads, atomic ID generation, persistent storage, containerized infrastructure, and automated tests.
@@ -201,6 +203,7 @@ The default suite uses fakes for Redis and Cassandra API behavior. It does not r
 
 ## Internal Documentation
 
+- [Architecture Decisions & Trade-offs](docs/en/architecture.md#architecture-decisions--trade-offs)
 - [Architecture](docs/en/architecture.md)
 - [Docker development](docs/en/docker.md)
 - [Test guide](tests/TESTS_README.md)

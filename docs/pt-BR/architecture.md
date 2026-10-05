@@ -1,5 +1,7 @@
 # Arquitetura
 
+[English](../en/architecture.md) | [Português](../pt-BR/architecture.md)
+
 ## Propósito
 
 `url-shortener` é um projeto backend de portfólio com foco em desenho de sistemas. Ele implementa um encurtador de URLs com criação autenticada, resolução pública, geração de IDs no Redis, persistência no Cassandra, codificação Base62 e ofuscação reversível do código público.
@@ -215,3 +217,87 @@ A suíte padrão usa fakes para os comportamentos de Redis e Cassandra, mantendo
 - ofuscação reversível.
 
 O comportamento com Redis e Cassandra reais é validado por configuração Docker Compose e verificações manuais ou de integração, não por todos os testes unitários padrão.
+
+## Decisões de Arquitetura e Trade-offs
+
+### Escopo e evidências
+
+**Implementado:** criação/resolução síncronas, clientes reutilizáveis, contador Redis, mappings Cassandra por chave, obfuscação determinística, Basic Auth e testes com fakes. **Projetado / preparado arquiteturalmente:** instâncias podem compartilhar stores, mas não há deploy multi-instância ou failover. **Planejado / trabalho futuro:** testes reais de dependências/falhas, capacidade medida, recuperação/HA, controle de abuso e operação de produção. São candidatos a revisão, não funcionalidades entregues.
+
+O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado (Python e persistência distribuída). Código prevalece. Alternativas são comparações de engenharia, não alegações de protótipos históricos.
+
+### Decisão: Python/FastAPI com chamadas síncronas
+
+**Contexto e decisão.** A carga coordena validação e dois stores, sem computação pesada. Python atende ao objetivo de aprendizado; FastAPI fornece Pydantic `HttpUrl`, OpenAPI e dependências de autenticação. Rotas `def` comuns fazem chamadas Redis/Cassandra síncronas por workers em threads do framework; lifespan `async` não torna operações de banco assíncronas.
+
+**Justificativa e alternativas.** Route → controller → service → infrastructure separa erros HTTP, orquestração e acesso a dados. Unir route/service reduz arquivos; drivers async evitam ocupar threads durante I/O, mas exigem compatibilidade/justificativa medida. Go/Java poderiam oferecer os mesmos contratos com outras ferramentas.
+
+**Trade-offs e consequências.** Serviço importa infraestrutura concreta e schemas Pydantic; helpers leem settings globais em cache em vez dos settings injetados. Há pontos de substituição por fakes, não Clean Architecture estrita. Stores lentos ocupam workers. Lifespan reutiliza/fecha clientes, mas startup conecta Cassandra e cria a tabela antes de atender.
+
+**Reavaliar quando.** Testes de carga mostrarem saturação, múltiplos adaptadores forem necessários ou configuração global dificultar isolamento.
+
+**Evidências:** [rotas](../../app/api/routes.py), [controller](../../app/controllers/url_controller.py), [serviço](../../app/services/url_service.py), [lifespan](../../app/main.py), [schemas](../../app/schemas.py).
+
+### Decisão: IDs atômicos Redis separados dos mappings persistentes
+
+**Contexto e decisão.** Escritas concorrentes precisam de inteiros distintos antes dos códigos. `SET ... NX` inicializa `start - 1` sem resetar contador existente; `INCR` aloca atomicamente entre instâncias que compartilham a chave Redis. Lock de processo protege inicialização local, não alocação distribuída. Começar em `62^4` produz `10000` no alfabeto padrão, não é requisito fundamental de encurtadores.
+
+**Justificativa e alternativas.** Primitiva atômica evita corrida de leitura/alteração/escrita. Sequência relacional junto do mapping elimina coordenação entre stores. Códigos aleatórios precisam de colisão/retry; IDs distribuídos/blocos exigem outro modelo de recuperação. Cassandra `MAX(id)+1` não é alocador concorrente seguro.
+
+**Trade-offs e consequências.** Redis não é fila nem cache de redirect. Uma instância centraliza criação, sem failover. AOF `everysec` melhora persistência, sem garantir todo incremento reconhecido. Falha Cassandra após alocação pode deixar gap aceitável. Timeout pode tornar persistência incerta; retry não é idempotente e cria outro ID. Rollback/reinicialização do contador pode reutilizar chave Cassandra; `INSERT` comum é upsert sem proteção condicional contra colisão. Recuperação afeta correção, não apenas disponibilidade. Redirects existentes não chamam Redis, embora uma aplicação iniciando dependa de sua configuração de startup.
+
+**Reavaliar quando.** Unicidade após recuperação, disponibilidade de escrita ou carga de alocação forem requisitos de produção. Coordenar restauração dos dois stores antes de liberar escritas.
+
+**Evidências:** [gerador](../../app/infrastructure/redis_id_generator.py), [store](../../app/infrastructure/cassandra_url_store.py), [AOF](../../compose.yaml), [testes](../../tests/test_redis_id_generator.py).
+
+### Decisão: Cassandra por chave primária para estudar persistência distribuída
+
+**Contexto e decisão.** Resolução conhece um ID e precisa de uma URL. `id bigint PRIMARY KEY` faz cada ID ser partition key, sem clustering columns, joins, índice por URL original, TTL ou deduplicação. Particionamento usa o partitioner Cassandra; inteiros sequenciais não formam uma partição única de contador nesta tabela.
+
+**Justificativa e alternativas.** O guia de entrevista apresenta Cassandra como escolha de aprendizado distribuído. PostgreSQL ou store chave/valor durável único simplificariam uma implantação pequena. Não há tráfego medido que exija Cassandra.
+
+**Trade-offs e consequências.** Bootstrap configura NetworkTopologyStrategy, RF=3 no datacenter escolhido. Três nós locais demonstram replicação, não isolamento físico de falhas. Seed descobre cluster, não lidera. `DCAwareRoundRobinPolicy` prefere o datacenter configurado. Execution profile **não** define consistência explícita de leitura/escrita; depende dos defaults do driver fixado. RF=3 sozinho não estabelece garantia própria de leitura após escrita. Quorum explícito troca mais confirmações de réplicas por latência/disponibilidade em falhas; não está configurado. Sem benchmark/capacidade de produção alegados.
+
+**Reavaliar quando.** Garantias de leitura após criação, topologia, custo operacional ou acessos mudarem. Definir/testar consistência, partições e perda de nós antes de alegar disponibilidade.
+
+**Evidências:** [store/profile](../../app/infrastructure/cassandra_url_store.py), [bootstrap](../../docker/cassandra/bootstrap.sh), [lockfile](../../uv.lock), [topologia](../../compose.yaml).
+
+### Decisão: Códigos reversíveis de sete caracteres sem chave pública persistida separada
+
+**Contexto e decisão.** ID vira Base62 e passa por `(a * id + b) mod 62^7`; `a` derivado da chave é coprimo ao módulo, permitindo inversa modular. Resolução reverte a transformação e consulta o inteiro sem segundo índice.
+
+**Justificativa e alternativas.** Para IDs únicos no domínio suportado, chave fixa e alfabeto padrão, a permutação evita colisões aleatórias e oculta a sequência evidente. Base62 direto simplifica mas expõe sequência. Chaves públicas aleatórias persistidas desacoplam links da configuração reversível, com custo de unicidade. Construções criptográficas revisadas seriam adequadas se imprevisibilidade fosse requisito de segurança.
+
+**Trade-offs e consequências.** É obfuscação, não criptografia/controle de acesso. `62^7` é domínio matemático, não capacidade medida; alocação começa acima de zero e rejeita IDs além do domínio. Mudar chave/alfabeto altera resolução de links já emitidos, sem versão armazenada. Validação do alfabeto verifica apenas tamanho/unicidade; padding usa `0` fixo, exigindo cuidado com alfabetos arbitrários. Instâncias precisam de configuração estável compartilhada.
+
+**Reavaliar quando.** Rotação de chave, domínio maior, imprevisibilidade criptográfica ou alfabeto arbitrário forem necessários. Preservar versões antigas de decode ou migrar para IDs públicos persistidos.
+
+**Evidências:** [Base62](../../app/helpers/base62.py), [obfuscação](../../app/helpers/obfuscation.py), [testes](../../tests/test_obfuscation.py).
+
+### Decisão: Criação autenticada e redirects públicos permanentes
+
+**Contexto e decisão.** Criar altera estado; compartilhar link não deve exigir conta do destinatário. POST usa um par Basic Auth configurado, comparações em tempo constante. GET retorna `301`; inválido/desconhecido compartilham 404, falhas esperadas de dependências geram 503 genérico.
+
+**Justificativa e alternativas.** Contrato pequeno sem contas persistidas. Tokens por usuário permitem propriedade/quotas com maior complexidade. Redirect temporário favorece destinos editáveis.
+
+**Trade-offs e consequências.** Basic Auth precisa de TLS fora de loopback; sem usuários/papéis/revogação individual/rate limit. `HttpUrl` valida sintaxe HTTP(S), não segurança do destino/anti-phishing; backend não busca o destino. Códigos públicos não são links privados. Cache de 301 dificulta edição, enforcement de exclusão e analytics completo. Configuração auth/codec ausente causa 500. Timeout/retry não têm idempotência.
+
+**Reavaliar quando.** Links editáveis, propriedade, analytics ou exposição pública exigirem controle de abuso. Definir caching/auth antes.
+
+**Evidências:** [segurança](../../app/core/security.py), [controller](../../app/controllers/url_controller.py), [testes HTTP](../../tests/test_http.py).
+
+### Decisão: Cluster Docker local e testes rápidos com limites operacionais explícitos
+
+**Contexto e decisão.** Compose executa app, Redis, três Cassandra e bootstrap. Reload/mounts suportam dev; loopback restringe exposição no host; app não-root. Lock uv congelado reproduz dependências. Fakes testam HTTP/helpers/comandos de contador/store sem cluster.
+
+**Justificativa e alternativas.** Três nós permitem inspecionar replicação com mais recursos que um. Fakes isolam contratos; testes efêmeros reais validariam consistência/persistência/falhas ao custo de startup. Produção multi-host é requisito diferente de Compose local.
+
+**Trade-offs e consequências.** Bootstrap é repetível mas escreve: pode alterar senhas/privilégios e replicação de keyspaces, inclusive `system_auth`. Papel da aplicação é SUPERUSER; health checks podem usar credenciais padrão Cassandra. Startup também executa `CREATE TABLE IF NOT EXISTS`. Não é provisionamento de produção com privilégio mínimo. Health da app busca OpenAPI, não probe do caminho real dos dados. Fakes não validam concorrência Redis real, repair, failover ou recuperação. Não há pipeline CI de deploy versionado.
+
+**Reavaliar quando.** Produção/recuperação confiável forem necessárias: separar provisionamento privilegiado das credenciais runtime, definir health/readiness e testar dependências/falhas reais. Cache/broker precisam de requisito de carga/entrega.
+
+**Evidências:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [health](../../docker/cassandra/healthcheck.sh), [guia de testes](../../tests/TESTS_README.pt-BR.md).
+
+### Verificação da revisão documental — 2026-10-05
+
+Os 82 testes existentes passaram em container descartável `url-shortener-app:local`, com app/testes atuais somente leitura e `uv run --frozen pytest -p no:cacheprovider`. Tentativa offline não encontrou dependência de teste fixada; downloads permitiram executar. Testes usaram fakes/settings isolados, não Redis/Cassandra reais. Lifespan/stack Compose não foram iniciados porque bootstrap escreve configuração de roles/schema. Sem mount de diretórios de banco ou `.env` local. Containers removidos; sem alegação de verificação real de cluster/failover.

@@ -1,5 +1,7 @@
 # Project Tests
 
+[English](TESTS_README.md) | [Português](TESTS_README.pt-BR.md)
+
 This directory contains the automated test suite for the implemented URL shortener backend.
 
 The suite is written with `pytest` and is intended to run inside the Docker application container.
