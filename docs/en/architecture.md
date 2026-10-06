@@ -1,6 +1,6 @@
 # Architecture
 
-[English](../en/architecture.md) | [Português](../pt-BR/architecture.md)
+[English](architecture.md) | [Português](../pt-BR/architecture.md)
 
 ## Purpose
 
@@ -296,7 +296,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Production deployment or dependable recovery is required: separate privileged provisioning from runtime credentials, define health/readiness and add real dependency/failure tests. No cache/broker should be added without a workload or delivery requirement.
 
-**Evidence:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [healthcheck](../../docker/cassandra/healthcheck.sh), [test guide](../../tests/TESTS_README.md).
+**Evidence:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [healthcheck](../../docker/cassandra/healthcheck.sh), [test guide](testing.md).
 
 ### Documentation review verification — 2026-10-05
 

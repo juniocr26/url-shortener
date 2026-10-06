@@ -1,8 +1,8 @@
 # Testes do Projeto
 
-[English](TESTS_README.md) | [Português](TESTS_README.pt-BR.md)
+[English](../en/testing.md) | [Português](testing.md)
 
-Este diretório contém a suíte automatizada do backend implementado do encurtador de URLs.
+O diretório `tests/` contém a suíte automatizada do backend implementado do encurtador de URLs.
 
 A suíte usa `pytest` e deve rodar dentro do container da aplicação.
 
@@ -74,8 +74,6 @@ docker compose exec app uv run pytest tests/test_http.py::test_resolve_short_cod
 
 ```text
 tests/
-├── TESTS_README.md
-├── TESTS_README.pt-BR.md
 ├── test_base62.py
 ├── test_cassandra_url_store.py
 ├── test_http.py
@@ -127,7 +125,7 @@ A suíte padrão não exige Redis real ou Cassandra real em toda execução. Ela
 Validação Docker Compose e verificações manuais dão confiança na infraestrutura local:
 
 ```bash
-docker compose config
+docker compose config --quiet
 docker compose up -d
 docker compose ps
 ```
@@ -159,3 +157,7 @@ Coberturas úteis que ainda não fazem parte da suíte padrão:
 - testes de modos de falha após restart de serviços Docker.
 
 Esses itens só devem ser documentados como implementados depois que os testes correspondentes forem adicionados.
+
+## Testes sem iniciar aplicação
+
+A suíte existente revisada substitui clientes de banco por fakes em memória; ASGITransport não executa lifespan FastAPI. Na raiz, use `docker compose -f compose.yaml -f compose.development.yaml run --rm --no-deps -T --entrypoint sh app -c 'uv run --no-sync pytest -p no:cacheprovider'` após instalar dependências dev congeladas. Evita startup app/bancos e alterações de dependências. Verificações reais exigem storage descartável e conexão isolada verificados; nome de keyspace contendo test não basta.

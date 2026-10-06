@@ -1,6 +1,6 @@
 # Arquitetura
 
-[English](../en/architecture.md) | [Português](../pt-BR/architecture.md)
+[English](../en/architecture.md) | [Português](architecture.md)
 
 ## Propósito
 
@@ -296,7 +296,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Produção/recuperação confiável forem necessárias: separar provisionamento privilegiado das credenciais runtime, definir health/readiness e testar dependências/falhas reais. Cache/broker precisam de requisito de carga/entrega.
 
-**Evidências:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [health](../../docker/cassandra/healthcheck.sh), [guia de testes](../../tests/TESTS_README.pt-BR.md).
+**Evidências:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [health](../../docker/cassandra/healthcheck.sh), [guia de testes](testing.md).
 
 ### Verificação da revisão documental — 2026-10-05
 

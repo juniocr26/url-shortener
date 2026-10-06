@@ -66,7 +66,7 @@ This launches FastAPI and still runs its lifespan schema initialization. It was 
 
 Missing `.env`: use the guarded template copy; restore custom values from a backup/secret source. In particular, preserve the original OBFUSCATING_KEY for existing short codes, and the existing database/auth credentials. Template copying cannot recover those values. Never rotate or invent them as a dependency fix.
 
-Missing tracked `compose.yaml`, `compose.development.yaml`, Dockerfile, `docker/cassandra/*.sh`, pyproject.toml, uv.lock or application config source: confirm the exact path is absent, then restore it individually with `git restore --source=HEAD -- path/to/missing-file` once that file has been committed. Newly added uncommitted override/guide files need your working-tree backup until committed. Do not restore whole directories over existing edits. No tracked environment generation command recovers custom settings.
+Missing tracked `compose.yaml`, `compose.development.yaml`, Dockerfile, `docker/cassandra/*.sh`, pyproject.toml, uv.lock or application config source: confirm the exact path is absent, then restore it individually with `git restore --source=HEAD -- path/to/missing-file` once that file has been committed. Uncommitted files and local edits require a working-tree backup. Do not restore whole directories over existing edits. No tracked environment generation command recovers custom settings.
 
 `.venv/pyvenv.cfg` is generated virtual environment metadata and uv sync recreates it as part of restoring an absent environment. For an otherwise intact environment whose generated pyvenv.cfg was deleted, stop your app and run this tested repair (it preserves existing environment files):
 
@@ -108,4 +108,4 @@ for path in .env.example compose.yaml docker/Dockerfile docker/cassandra/entrypo
 done
 ```
 
-This restores only absent tracked files, preserving existing edits. Custom untracked configuration still requires a backup. Until the new development override and guide are committed, their recovery requires a working-tree backup. The base production image build was not rerun; production stage behavior was reviewed from the Dockerfile.
+This restores only absent tracked files, preserving existing edits. Custom untracked configuration still requires a backup. Check tracking of the override and guide; preserve local edits in a working-tree backup. The base production image build was not rerun; production stage behavior was reviewed from the Dockerfile.

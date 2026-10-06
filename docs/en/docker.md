@@ -97,7 +97,7 @@ curl -i \
 Resolve a URL without authentication:
 
 ```sh
-curl -i --max-redirs 0 http://localhost:8000/<short_code>
+curl -i --max-redirs 0 "http://localhost:8000/REPLACE_WITH_SHORT_CODE"
 ```
 
 `GET /{short_code}` should not send or require Basic Auth.
@@ -202,7 +202,7 @@ No Cassandra data directory is shared between nodes.
 Stop services without deleting data:
 
 ```sh
-docker compose down
+docker compose stop
 ```
 
 Dependency recovery does not require volume removal. Redis and Cassandra data must be preserved; use the dedicated [recovery guide](docker-development-setup.md).

@@ -1,8 +1,8 @@
 # Project Tests
 
-[English](TESTS_README.md) | [Português](TESTS_README.pt-BR.md)
+[English](testing.md) | [Português](../pt-BR/testing.md)
 
-This directory contains the automated test suite for the implemented URL shortener backend.
+The `tests/` directory contains the automated test suite for the implemented URL shortener backend.
 
 The suite is written with `pytest` and is intended to run inside the Docker application container.
 
@@ -74,8 +74,6 @@ docker compose exec app uv run pytest tests/test_http.py::test_resolve_short_cod
 
 ```text
 tests/
-├── TESTS_README.md
-├── TESTS_README.pt-BR.md
 ├── test_base62.py
 ├── test_cassandra_url_store.py
 ├── test_http.py
@@ -127,7 +125,7 @@ The default suite does not require live Redis or live Cassandra for every run. I
 Docker Compose validation and manual checks are used for local infrastructure confidence:
 
 ```bash
-docker compose config
+docker compose config --quiet
 docker compose up -d
 docker compose ps
 ```
@@ -159,3 +157,7 @@ Additional coverage that would be useful but is not part of the current default 
 - failure-mode tests for Docker service restarts.
 
 Those items should only be documented as implemented after corresponding tests are added.
+
+## Tests without application startup
+
+The reviewed existing suite replaces database clients with in-memory fakes; HTTP ASGITransport does not run the FastAPI lifespan. From the project root, use `docker compose -f compose.yaml -f compose.development.yaml run --rm --no-deps -T --entrypoint sh app -c 'uv run --no-sync pytest -p no:cacheprovider'` after the locked dev dependencies are installed. This avoids application/database startup and dependency changes. Real infrastructure checks require verified disposable storage and connection isolation; a keyspace named test alone is insufficient.

@@ -2,6 +2,8 @@
 
 [English](../en/docker.md) | [Português](docker.md)
 
+Use [desenvolvimento Docker e recuperação](docker-development-setup.md) para instalar dependências no host sem iniciar bancos. O startup base abaixo altera schema e não é uma auditoria de dependências.
+
 ## Filosofia
 
 Este projeto segue um fluxo Docker-first. O host deve fornecer principalmente:
@@ -19,7 +21,7 @@ Python 3.14, `uv`, FastAPI, Redis, Cassandra e comandos do projeto devem rodar d
 Crie o arquivo local:
 
 ```sh
-cp .env.example .env
+if [ ! -e .env ]; then cp .env.example .env; fi
 ```
 
 Preencha valores locais para:
@@ -38,7 +40,7 @@ Não faça commit de `.env` nem de valores reais de segredo.
 Valide a interpolação e a definição dos serviços:
 
 ```sh
-docker compose config
+docker compose config --quiet
 ```
 
 Construa a imagem da aplicação:
@@ -95,7 +97,7 @@ curl -i \
 Resolver uma URL sem autenticação:
 
 ```sh
-curl -i --max-redirs 0 http://localhost:8000/<short_code>
+curl -i --max-redirs 0 "http://localhost:8000/REPLACE_WITH_SHORT_CODE"
 ```
 
 `GET /{short_code}` não deve enviar nem exigir Basic Auth.
@@ -195,18 +197,10 @@ Cada nó tem seu próprio diretório local de dados, ignorado pelo Git:
 
 Nenhum diretório de dados Cassandra é compartilhado entre os nós.
 
-## Parar e Resetar
-
-Parar serviços sem apagar dados:
+## Parar preservando dados
 
 ```sh
-docker compose down
+docker compose stop
 ```
 
-Apagar containers e volumes Docker locais:
-
-```sh
-docker compose down --volumes
-```
-
-Os diretórios bind-mounted de Redis e Cassandra não são apagados por um `docker compose down` normal. Remova esses diretórios apenas quando a intenção for resetar dados locais.
+Recuperação de dependências não exige remoção de volumes. Preserve dados Redis/Cassandra e siga [recuperação de desenvolvimento](docker-development-setup.md).
