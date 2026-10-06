@@ -20,7 +20,7 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM python:${PYTHON_VERSION}-slim AS development
 
 ARG APP_UID=1000
 ARG APP_GID=1000
@@ -41,9 +41,10 @@ RUN groupadd --gid "${APP_GID}" app \
 
 WORKDIR /app
 
+USER app
+
+FROM development AS runtime
 COPY --from=build --chown=app:app /opt/venv /opt/venv
 COPY --chown=app:app . .
-
-USER app
 
 CMD ["sh", "-c", "uvicorn app.main:app --host \"${APP_HOST:-0.0.0.0}\" --port \"${APP_PORT:-8000}\""]

@@ -1,0 +1,12 @@
+# Opt-in dependencies on the host; base runtime behavior stays intact.
+services:
+  app:
+    image: url-shortener-app:development
+    build:
+      target: development
+    environment:
+      UV_PROJECT_ENVIRONMENT: /opt/venv
+      UV_CACHE_DIR: /home/app/.cache/uv
+    volumes:
+      - ./.venv:/opt/venv
+      - ./.cache/uv:/home/app/.cache/uv

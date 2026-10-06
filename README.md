@@ -117,7 +117,7 @@ http://localhost:8000/docs
 Copy the public environment contract and fill local secret values:
 
 ```sh
-cp .env.example .env
+if [ ! -e .env ]; then cp .env.example .env; fi
 ```
 
 The `.env` file is ignored by Git. Do not commit real Redis passwords, Cassandra passwords, Basic Auth passwords, or `OBFUSCATING_KEY` values.
@@ -229,3 +229,5 @@ Júnio Rosa
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+For safe host-persisted dependencies and configuration recovery, see [Docker development setup](docs/en/docker-development-setup.md).

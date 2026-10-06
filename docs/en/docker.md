@@ -2,6 +2,8 @@
 
 [English](docker.md) | [Português](../pt-BR/docker.md)
 
+For host-persisted Python dependencies and safe installation without database startup, follow [Docker development setup and recovery](docker-development-setup.md). The base startup below performs schema writes and is not a dependency audit.
+
 ## Philosophy
 
 This project is Docker-first. The host machine should mainly provide:
@@ -19,7 +21,7 @@ Python 3.14, `uv`, FastAPI, Redis, Cassandra, and project commands are expected 
 Create a local file:
 
 ```sh
-cp .env.example .env
+if [ ! -e .env ]; then cp .env.example .env; fi
 ```
 
 Fill local values for:
@@ -38,7 +40,7 @@ Do not commit `.env` or real secret values.
 Validate Compose interpolation and service definitions:
 
 ```sh
-docker compose config
+docker compose config --quiet
 ```
 
 Build the application image:
@@ -203,10 +205,4 @@ Stop services without deleting data:
 docker compose down
 ```
 
-Delete containers and local Docker volumes:
-
-```sh
-docker compose down --volumes
-```
-
-The Redis and Cassandra bind-mounted data directories are not deleted by normal `docker compose down`. Delete them only when a local data reset is intentional.
+Dependency recovery does not require volume removal. Redis and Cassandra data must be preserved; use the dedicated [recovery guide](docker-development-setup.md).
