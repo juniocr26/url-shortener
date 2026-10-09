@@ -161,3 +161,5 @@ Esses itens só devem ser documentados como implementados depois que os testes c
 ## Testes sem iniciar aplicação
 
 A suíte existente revisada substitui clientes de banco por fakes em memória; ASGITransport não executa lifespan FastAPI. Na raiz, use `docker compose -f compose.yaml -f compose.development.yaml run --rm --no-deps -T --entrypoint sh app -c 'uv run --no-sync pytest -p no:cacheprovider'` após instalar dependências dev congeladas. Evita startup app/bancos e alterações de dependências. Verificações reais exigem storage descartável e conexão isolada verificados; nome de keyspace contendo test não basta.
+
+Preenchimento com alfabeto customizado e perda da chave Redis após inicialização, descritos na [arquitetura](architecture.md), são achados estáticos, não regressões executadas aqui. A suíte atual não estabelece recuperação desses cenários.

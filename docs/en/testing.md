@@ -161,3 +161,5 @@ Those items should only be documented as implemented after corresponding tests a
 ## Tests without application startup
 
 The reviewed existing suite replaces database clients with in-memory fakes; HTTP ASGITransport does not run the FastAPI lifespan. From the project root, use `docker compose -f compose.yaml -f compose.development.yaml run --rm --no-deps -T --entrypoint sh app -c 'uv run --no-sync pytest -p no:cacheprovider'` after the locked dev dependencies are installed. This avoids application/database startup and dependency changes. Real infrastructure checks require verified disposable storage and connection isolation; a keyspace named test alone is insufficient.
+
+The custom-alphabet padding and loss of an already initialized Redis key described in [architecture](architecture.md) are static findings, not regressions executed during this review. The current suite does not establish recovery for those scenarios.

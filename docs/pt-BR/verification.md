@@ -38,3 +38,9 @@ Com mesmo prefixo, `stop app redis cassandra-1 cassandra-2 cassandra-3 cassandra
 ## Limites e conferência documental
 
 Nenhum check real usou bancos existentes. Deploy de produção, navegador/Postman, carga, failover, restart/recuperação e isolamento físico entre hosts não foram testados. JSON Postman inspecionado: `url-shortener.local.postman_environment.json` declara collection v2.1, contém duas requisições e defaults Basic Auth vazios. Documentação aponta ao nome real. Pares de idiomas, links/âncoras, caminhos e whitespace passaram; não restam exceções de documentação em localização obrigatória.
+
+## Auditoria documental estática — 2026-10-09
+
+Inspecionados HTTP/serviço/configuração, contador, Base62/obfuscação, adapter Cassandra, fakes, manifestos e Compose/bootstrap. Documentados limites de padding customizado e perda do contador após inicialização, sem alterar código. Orientação de configuração e aprofundamentos/estudo atualizados. Não executados testes, requests, bootstrap, instalação ou operações Redis/Cassandra. Resultados anteriores de 82 testes/smoke isolado não foram repetidos.
+
+Checagens estáticas de links/âncoras, fences, pares de idioma e SHA-256 para alterações somente documentais estão na [revisão de entrevista](../../../tecnical-interview/docs/pt-BR/verification.md). Arquivos reais de ambiente e backups sensíveis não foram lidos/alterados.

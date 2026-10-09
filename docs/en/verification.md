@@ -38,3 +38,9 @@ With the same Compose prefix, `stop app redis cassandra-1 cassandra-2 cassandra-
 ## Limits and documentation checks
 
 No live check ran against existing application databases. Production deployment, browser/Postman execution, load, failover, restart/recovery and multi-host fault isolation were not tested. Postman JSON was inspected: the tracked `url-shortener.local.postman_environment.json` declares collection v2.1, contains two requests and empty Basic Auth defaults. Updated docs point to that actual filename. Local bilingual page pairs, links/anchors, paths and whitespace checks passed; no required-location documentation exceptions remain.
+
+## Static documentation audit — 2026-10-09
+
+Inspected HTTP/service/configuration, counter allocation, Base62/obfuscation, Cassandra adapter, fake tests, manifests and Compose/bootstrap. Documented custom-alphabet padding and counter-loss-after-initialization limits without changing source. Updated configuration guidance and interview follow-ups/study order. No tests, requests, bootstrap, dependency installation or Redis/Cassandra operations were executed. Historical 82-test and isolated smoke results above were not repeated.
+
+Static local-link/anchor, fence, language-pair and documentation-only SHA-256 checks are recorded in the shared [interview review](../../../tecnical-interview/docs/en/verification.md). Runtime environment files and secret-bearing backups were not read or modified.

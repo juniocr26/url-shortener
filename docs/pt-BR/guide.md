@@ -71,6 +71,7 @@ O arquivo `.env` é ignorado pelo Git. Não faça commit de senhas reais do Redi
 
 Variáveis importantes:
 
+- `BASE62_ALPHABET`: mantenha o padrão iniciado em zero para o preenchimento implementado; alfabetos arbitrários têm [limitação documentada](architecture.md). Mudar alfabeto/chave rompe decoding existente sem estratégia de versão/migração.
 - `SHORT_URL_BASE`: URL base utilizada para construir `short_url`.
 - `URL_ID_START`: valor inicial usado como referência para a geração de IDs. O padrão é `14776336`, equivalente a `62^4`.
 - `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD`: obrigatórios para `POST /urls`.

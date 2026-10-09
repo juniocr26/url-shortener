@@ -301,3 +301,9 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 ### Documentation review verification — 2026-10-05
 
 All 82 existing tests passed in a disposable `url-shortener-app:local` container using read-only current app/test mounts and `uv run --frozen pytest -p no:cacheprovider`. An offline attempt lacked a locked test dependency; enabling dependency downloads allowed the suite to run. Tests used fakes and isolated settings, not live Redis/Cassandra. The application lifespan/full Compose stack was not started, because bootstrap writes role/schema configuration. No database directories or local `.env` were mounted. Containers were removed; this is no claim of real cluster/failover verification.
+
+## Source-review limitations — 2026-10-09
+
+The helpers read global cached settings even when a service receives injected Settings. `obfuscate_base62` pads with literal `0`, while alphabet validation only checks 62 unique characters. The default alphabet starts with 0; a custom alphabet with another zero digit can produce incorrectly decoded padded codes (or invalid characters if it omits 0). Keep existing key/alphabet stable; arbitrary alphabet support is not a verified guarantee. This issue is documented, not fixed.
+
+`RedisIdGenerator` remembers initialization in process memory and does not recheck the counter on later calls. Loss/deletion of the key while the process remains initialized bypasses the start-1 setup; subsequent INCR can restart below the configured range. This is another ID-reuse/recovery risk, distinct from harmless allocation gaps after Cassandra failure. Existing fake tests cover initialization and failures, not that recovery scenario or live concurrency. No tests or dependency services were run in this audit.

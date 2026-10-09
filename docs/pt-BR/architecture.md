@@ -301,3 +301,9 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 ### Verificação da revisão documental — 2026-10-05
 
 Os 82 testes existentes passaram em container descartável `url-shortener-app:local`, com app/testes atuais somente leitura e `uv run --frozen pytest -p no:cacheprovider`. Tentativa offline não encontrou dependência de teste fixada; downloads permitiram executar. Testes usaram fakes/settings isolados, não Redis/Cassandra reais. Lifespan/stack Compose não foram iniciados porque bootstrap escreve configuração de roles/schema. Sem mount de diretórios de banco ou `.env` local. Containers removidos; sem alegação de verificação real de cluster/failover.
+
+## Limitações verificadas no código — 2026-10-09
+
+Helpers usam configuração global em cache mesmo quando o serviço recebe Settings injetado. `obfuscate_base62` preenche com `0` literal; a validação do alfabeto só exige 62 caracteres únicos. O padrão começa em 0; um alfabeto com outro dígito zero pode decodificar códigos preenchidos incorretamente (ou gerar caractere inválido se não contiver 0). Mantenha chave/alfabeto existentes estáveis; suporte arbitrário não é garantia verificada. Achado documentado, sem corrigir código.
+
+`RedisIdGenerator` lembra a inicialização em memória e não reconsulta o contador depois. Perder/excluir a chave com o processo já inicializado pula start-1; INCR posterior pode reiniciar abaixo da faixa configurada. É risco de reutilização/recuperação, distinto de lacunas após falha Cassandra. Fakes cobrem inicialização/erros, não esse cenário nem concorrência real. Nenhum teste ou serviço foi executado nesta auditoria.

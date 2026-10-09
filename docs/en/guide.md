@@ -71,6 +71,7 @@ The `.env` file is ignored by Git. Do not commit real Redis passwords, Cassandra
 
 Important variables:
 
+- `BASE62_ALPHABET`: keep the default zero-first alphabet for the implemented padding; arbitrary custom alphabets have a [documented compatibility limitation](architecture.md). Changing the alphabet or obfuscation key breaks existing decoding without a version/migration strategy.
 - `SHORT_URL_BASE`: base URL used to build `short_url`.
 - `URL_ID_START`: first generated ID target. The default is `14776336`, which is `62^4`.
 - `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD`: required for `POST /urls`.
