@@ -1,0 +1,13 @@
+# Identity, mappings and consistency
+
+[English](identity-and-consistency.md) | [Português brasileiro](../../pt-BR/database/identity-and-consistency.md)
+
+Static source review: 2026-10-10. Implemented facts, general theory and hypothetical changes are distinguished below. Runtime commands were not executed.
+
+Redis `SET NX` initializes the shared counter to start minus one; `INCR` allocates an integer atomically at the server. The process lock and `_initialized` flag avoid redundant initialization within one generator, while NX handles competing initializers across processes. Neither the lock nor INCR creates a transaction with Cassandra. Cassandra `urls_by_id` uses `id bigint PRIMARY KEY` and `original_url text`; inserts and reads use bound values. The table is query-shaped for single-key resolution rather than joins or search by destination.
+
+If allocation succeeds but storage fails, the ID is consumed. A timeout after Cassandra accepted the write may leave a mapping even though the caller sees failure. Retrying creation allocates another ID. Gaps are harmless if allocation never reuses an existing ID, but losing/resetting counter state while mappings survive can overwrite a row because INSERT is an upsert. Redis AOF `everysec` is configured locally; it is neither zero-loss durability nor coordinated backup of both stores. Restoration requires a counter floor consistent with retained mappings, plus preserved alphabet/key compatibility. The application has no automated repair/recovery coordinator.
+
+The Compose/bootstrap design has three Cassandra peers and NetworkTopologyStrategy RF=3. All are local; they do not represent three independent host failure domains. Seeds assist discovery, not leader election. `DCAwareRoundRobinPolicy` sets local-DC preference but no read/write consistency is explicitly selected in the execution profile. Do not derive a guaranteed read-after-write contract from RF alone. Quorum reads/writes are a hypothetical alternative that trade replica acknowledgements and availability for stronger overlap; conditional writes would address a different invariant and add coordination cost.
+
+Encoding an integer takes repeated divmod by 62; seven-character obfuscation operates modulo `62**7`. SHA-256 derives affine parameters, `gcd(a, modulus)=1` enables a modular inverse, and padding gives fixed width under the default alphabet. The counter can outgrow this space; the service then returns a configuration error after consuming an ID. A non-default alphabet has an additional unresolved compatibility concern: padding is literal `0`, which need not represent digit zero. Treat arbitrary alphabet changes as unverified, not transparently supported migrations.

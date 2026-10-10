@@ -1,8 +1,8 @@
 # Desenvolvimento com Docker
 
-[English](../en/docker.md) | [Português](docker.md)
+[English](../../en/docker/runtime.md) | [Português](runtime.md)
 
-Use [desenvolvimento Docker e recuperação](docker-development-setup.md) para instalar dependências no host sem iniciar bancos. O startup base abaixo altera schema e não é uma auditoria de dependências.
+Use [desenvolvimento Docker e recuperação](development.md) para instalar dependências no host sem iniciar bancos. O startup base abaixo altera schema e não é uma auditoria de dependências.
 
 ## Filosofia
 
@@ -203,4 +203,4 @@ Nenhum diretório de dados Cassandra é compartilhado entre os nós.
 docker compose stop
 ```
 
-Recuperação de dependências não exige remoção de volumes. Preserve dados Redis/Cassandra e siga [recuperação de desenvolvimento](docker-development-setup.md).
+Recuperação de dependências não exige remoção de volumes. Preserve dados Redis/Cassandra e siga [recuperação de desenvolvimento](development.md).

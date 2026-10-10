@@ -1,6 +1,6 @@
 # Project Tests
 
-[English](testing.md) | [Português](../pt-BR/testing.md)
+[English](strategy.md) | [Português](../../pt-BR/testing/strategy.md)
 
 The `tests/` directory contains the automated test suite for the implemented URL shortener backend.
 
@@ -162,4 +162,4 @@ Those items should only be documented as implemented after corresponding tests a
 
 The reviewed existing suite replaces database clients with in-memory fakes; HTTP ASGITransport does not run the FastAPI lifespan. From the project root, use `docker compose -f compose.yaml -f compose.development.yaml run --rm --no-deps -T --entrypoint sh app -c 'uv run --no-sync pytest -p no:cacheprovider'` after the locked dev dependencies are installed. This avoids application/database startup and dependency changes. Real infrastructure checks require verified disposable storage and connection isolation; a keyspace named test alone is insufficient.
 
-The custom-alphabet padding and loss of an already initialized Redis key described in [architecture](architecture.md) are static findings, not regressions executed during this review. The current suite does not establish recovery for those scenarios.
+The custom-alphabet padding and loss of an already initialized Redis key described in [architecture](../architecture/overview.md) are static findings, not regressions executed during this review. The current suite does not establish recovery for those scenarios.

@@ -1,6 +1,6 @@
 # Architecture
 
-[English](architecture.md) | [Português](../pt-BR/architecture.md)
+[English](overview.md) | [Português](../../pt-BR/architecture/overview.md)
 
 ## Purpose
 
@@ -236,7 +236,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Load tests reveal worker saturation, multiple adapters are needed, or globally configured helpers make isolation difficult.
 
-**Evidence:** [routes](../../app/api/routes.py), [controller](../../app/controllers/url_controller.py), [service](../../app/services/url_service.py), [lifespan](../../app/main.py), [schemas](../../app/schemas.py).
+**Evidence:** [routes](../../../app/api/routes.py), [controller](../../../app/controllers/url_controller.py), [service](../../../app/services/url_service.py), [lifespan](../../../app/main.py), [schemas](../../../app/schemas.py).
 
 ### Decision: Redis atomic IDs separated from durable mappings
 
@@ -248,7 +248,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Durable uniqueness after recovery, write availability or sustained allocation load becomes a production requirement. Coordinate restores of both stores before allowing writes.
 
-**Evidence:** [generator](../../app/infrastructure/redis_id_generator.py), [store](../../app/infrastructure/cassandra_url_store.py), [Compose AOF](../../compose.yaml), [generator tests](../../tests/test_redis_id_generator.py).
+**Evidence:** [generator](../../../app/infrastructure/redis_id_generator.py), [store](../../../app/infrastructure/cassandra_url_store.py), [Compose AOF](../../../compose.yaml), [generator tests](../../../tests/test_redis_id_generator.py).
 
 ### Decision: Primary-key Cassandra persistence for a distributed-storage exercise
 
@@ -260,7 +260,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Read-after-create guarantees, topology, operational cost or access patterns change. Set and test consistency explicitly, including partitions and node loss, before claiming availability guarantees.
 
-**Evidence:** [store and execution profile](../../app/infrastructure/cassandra_url_store.py), [bootstrap](../../docker/cassandra/bootstrap.sh), [lockfile](../../uv.lock), [Compose topology](../../compose.yaml).
+**Evidence:** [store and execution profile](../../../app/infrastructure/cassandra_url_store.py), [bootstrap](../../../docker/cassandra/bootstrap.sh), [lockfile](../../../uv.lock), [Compose topology](../../../compose.yaml).
 
 ### Decision: Reversible seven-character codes instead of storing a separate public key
 
@@ -272,7 +272,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Key rotation, larger code space, cryptographic unpredictability or arbitrary alphabet support is required. Preserve old decoding versions or migrate to persisted public identifiers.
 
-**Evidence:** [Base62](../../app/helpers/base62.py), [obfuscation](../../app/helpers/obfuscation.py), [round-trip tests](../../tests/test_obfuscation.py).
+**Evidence:** [Base62](../../../app/helpers/base62.py), [obfuscation](../../../app/helpers/obfuscation.py), [round-trip tests](../../../tests/test_obfuscation.py).
 
 ### Decision: Authenticated creation, public permanent redirects
 
@@ -284,7 +284,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Links become editable, ownership or analytics is introduced, or public exposure requires abuse handling. Define redirect caching and authentication requirements first.
 
-**Evidence:** [security](../../app/core/security.py), [controller](../../app/controllers/url_controller.py), [HTTP tests](../../tests/test_http.py).
+**Evidence:** [security](../../../app/core/security.py), [controller](../../../app/controllers/url_controller.py), [HTTP tests](../../../tests/test_http.py).
 
 ### Decision: Local Docker cluster and fast tests, with explicit operational limits
 
@@ -296,7 +296,7 @@ The Technical Interview URL Shortener guide supports the learning intent (Python
 
 **Revisit when.** Production deployment or dependable recovery is required: separate privileged provisioning from runtime credentials, define health/readiness and add real dependency/failure tests. No cache/broker should be added without a workload or delivery requirement.
 
-**Evidence:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [healthcheck](../../docker/cassandra/healthcheck.sh), [test guide](testing.md).
+**Evidence:** [Compose](../../../compose.yaml), [Dockerfile](../../../docker/Dockerfile), [bootstrap](../../../docker/cassandra/bootstrap.sh), [healthcheck](../../../docker/cassandra/healthcheck.sh), [test guide](../testing/strategy.md).
 
 ### Documentation review verification — 2026-10-05
 

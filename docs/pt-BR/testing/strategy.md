@@ -1,6 +1,6 @@
 # Testes do Projeto
 
-[English](../en/testing.md) | [Português](testing.md)
+[English](../../en/testing/strategy.md) | [Português](strategy.md)
 
 O diretório `tests/` contém a suíte automatizada do backend implementado do encurtador de URLs.
 
@@ -162,4 +162,4 @@ Esses itens só devem ser documentados como implementados depois que os testes c
 
 A suíte existente revisada substitui clientes de banco por fakes em memória; ASGITransport não executa lifespan FastAPI. Na raiz, use `docker compose -f compose.yaml -f compose.development.yaml run --rm --no-deps -T --entrypoint sh app -c 'uv run --no-sync pytest -p no:cacheprovider'` após instalar dependências dev congeladas. Evita startup app/bancos e alterações de dependências. Verificações reais exigem storage descartável e conexão isolada verificados; nome de keyspace contendo test não basta.
 
-Preenchimento com alfabeto customizado e perda da chave Redis após inicialização, descritos na [arquitetura](architecture.md), são achados estáticos, não regressões executadas aqui. A suíte atual não estabelece recuperação desses cenários.
+Preenchimento com alfabeto customizado e perda da chave Redis após inicialização, descritos na [arquitetura](../architecture/overview.md), são achados estáticos, não regressões executadas aqui. A suíte atual não estabelece recuperação desses cenários.

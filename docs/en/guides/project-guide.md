@@ -1,6 +1,6 @@
 # url-shortener
 
-[English](guide.md) | [Português](../pt-BR/guide.md)
+[English](project-guide.md) | [Português](../../pt-BR/guides/project-guide.md)
 
 `url-shortener` is a Docker-first backend/system-design portfolio project that implements URL creation and public redirect resolution with FastAPI, Redis, Cassandra, Base62 encoding, and reversible short-code obfuscation.
 
@@ -71,7 +71,7 @@ The `.env` file is ignored by Git. Do not commit real Redis passwords, Cassandra
 
 Important variables:
 
-- `BASE62_ALPHABET`: keep the default zero-first alphabet for the implemented padding; arbitrary custom alphabets have a [documented compatibility limitation](architecture.md). Changing the alphabet or obfuscation key breaks existing decoding without a version/migration strategy.
+- `BASE62_ALPHABET`: keep the default zero-first alphabet for the implemented padding; arbitrary custom alphabets have a [documented compatibility limitation](../architecture/overview.md). Changing the alphabet or obfuscation key breaks existing decoding without a version/migration strategy.
 - `SHORT_URL_BASE`: base URL used to build `short_url`.
 - `URL_ID_START`: first generated ID target. The default is `14776336`, which is `62^4`.
 - `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD`: required for `POST /urls`.
@@ -130,7 +130,7 @@ docker compose stop
 ```
 
 
-[Testing](testing.md) · [Architecture and trade-offs](architecture.md) · [Docker](docker.md) · [Postman](postman.md)
+[Testing](../testing/strategy.md) · [Architecture and trade-offs](../architecture/overview.md) · [Docker](../docker/runtime.md) · [Postman](../api/postman.md)
 
 ## Author
 
@@ -142,4 +142,4 @@ Júnio Rosa
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
-For safe host-persisted dependencies and configuration recovery, see [Docker development setup](docker-development-setup.md).
+For safe host-persisted dependencies and configuration recovery, see [Docker development setup](../docker/development.md).

@@ -6,7 +6,7 @@ Execute no diretório `url-shortener/` do host. Docker Engine/Desktop, Compose (
 
 Projeto Compose `url-shortener`: `app` executa FastAPI/Uvicorn com reload, `redis` persiste contador e `cassandra-1/2/3` formam cluster. `cassandra-init` inicializa autenticação/schema. Portas loopback: APP_PORT (8000), REDIS_PORT (6379) e cassandra-1 fixa em 9042.
 
-Entrypoints Cassandra alteram authenticator/authorizer em `/etc/cassandra/cassandra.yaml` no container. Bootstrap pode criar/alterar roles, alterar replicação de system_auth, criar/alterar keyspace da aplicação e criar tabela. Lifespan FastAPI conecta e executa CREATE TABLE IF NOT EXISTS. Redis escreve na geração de URLs. Não há worker/scheduler separado. `up` comum não é auditoria segura de dependências, mesmo com recursos existentes. Esses startups não foram realizados na auditoria anterior; a revisão documental posterior usa armazenamento descartável isolado, conforme [verificação](verification.md).
+Entrypoints Cassandra alteram authenticator/authorizer em `/etc/cassandra/cassandra.yaml` no container. Bootstrap pode criar/alterar roles, alterar replicação de system_auth, criar/alterar keyspace da aplicação e criar tabela. Lifespan FastAPI conecta e executa CREATE TABLE IF NOT EXISTS. Redis escreve na geração de URLs. Não há worker/scheduler separado. `up` comum não é auditoria segura de dependências, mesmo com recursos existentes. Esses startups não foram realizados na auditoria anterior; a revisão documental posterior usa armazenamento descartável isolado, conforme [verificação](../testing/verification.md).
 
 ## Clone novo sem iniciar bancos
 

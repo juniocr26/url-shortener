@@ -1,6 +1,6 @@
 # Arquitetura
 
-[English](../en/architecture.md) | [Português](architecture.md)
+[English](../../en/architecture/overview.md) | [Português](overview.md)
 
 ## Propósito
 
@@ -236,7 +236,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Testes de carga mostrarem saturação, múltiplos adaptadores forem necessários ou configuração global dificultar isolamento.
 
-**Evidências:** [rotas](../../app/api/routes.py), [controller](../../app/controllers/url_controller.py), [serviço](../../app/services/url_service.py), [lifespan](../../app/main.py), [schemas](../../app/schemas.py).
+**Evidências:** [rotas](../../../app/api/routes.py), [controller](../../../app/controllers/url_controller.py), [serviço](../../../app/services/url_service.py), [lifespan](../../../app/main.py), [schemas](../../../app/schemas.py).
 
 ### Decisão: IDs atômicos Redis separados dos mappings persistentes
 
@@ -248,7 +248,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Unicidade após recuperação, disponibilidade de escrita ou carga de alocação forem requisitos de produção. Coordenar restauração dos dois stores antes de liberar escritas.
 
-**Evidências:** [gerador](../../app/infrastructure/redis_id_generator.py), [store](../../app/infrastructure/cassandra_url_store.py), [AOF](../../compose.yaml), [testes](../../tests/test_redis_id_generator.py).
+**Evidências:** [gerador](../../../app/infrastructure/redis_id_generator.py), [store](../../../app/infrastructure/cassandra_url_store.py), [AOF](../../../compose.yaml), [testes](../../../tests/test_redis_id_generator.py).
 
 ### Decisão: Cassandra por chave primária para estudar persistência distribuída
 
@@ -260,7 +260,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Garantias de leitura após criação, topologia, custo operacional ou acessos mudarem. Definir/testar consistência, partições e perda de nós antes de alegar disponibilidade.
 
-**Evidências:** [store/profile](../../app/infrastructure/cassandra_url_store.py), [bootstrap](../../docker/cassandra/bootstrap.sh), [lockfile](../../uv.lock), [topologia](../../compose.yaml).
+**Evidências:** [store/profile](../../../app/infrastructure/cassandra_url_store.py), [bootstrap](../../../docker/cassandra/bootstrap.sh), [lockfile](../../../uv.lock), [topologia](../../../compose.yaml).
 
 ### Decisão: Códigos reversíveis de sete caracteres sem chave pública persistida separada
 
@@ -272,7 +272,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Rotação de chave, domínio maior, imprevisibilidade criptográfica ou alfabeto arbitrário forem necessários. Preservar versões antigas de decode ou migrar para IDs públicos persistidos.
 
-**Evidências:** [Base62](../../app/helpers/base62.py), [obfuscação](../../app/helpers/obfuscation.py), [testes](../../tests/test_obfuscation.py).
+**Evidências:** [Base62](../../../app/helpers/base62.py), [obfuscação](../../../app/helpers/obfuscation.py), [testes](../../../tests/test_obfuscation.py).
 
 ### Decisão: Criação autenticada e redirects públicos permanentes
 
@@ -284,7 +284,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Links editáveis, propriedade, analytics ou exposição pública exigirem controle de abuso. Definir caching/auth antes.
 
-**Evidências:** [segurança](../../app/core/security.py), [controller](../../app/controllers/url_controller.py), [testes HTTP](../../tests/test_http.py).
+**Evidências:** [segurança](../../../app/core/security.py), [controller](../../../app/controllers/url_controller.py), [testes HTTP](../../../tests/test_http.py).
 
 ### Decisão: Cluster Docker local e testes rápidos com limites operacionais explícitos
 
@@ -296,7 +296,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Produção/recuperação confiável forem necessárias: separar provisionamento privilegiado das credenciais runtime, definir health/readiness e testar dependências/falhas reais. Cache/broker precisam de requisito de carga/entrega.
 
-**Evidências:** [Compose](../../compose.yaml), [Dockerfile](../../docker/Dockerfile), [bootstrap](../../docker/cassandra/bootstrap.sh), [health](../../docker/cassandra/healthcheck.sh), [guia de testes](testing.md).
+**Evidências:** [Compose](../../../compose.yaml), [Dockerfile](../../../docker/Dockerfile), [bootstrap](../../../docker/cassandra/bootstrap.sh), [health](../../../docker/cassandra/healthcheck.sh), [guia de testes](../testing/strategy.md).
 
 ### Verificação da revisão documental — 2026-10-05
 

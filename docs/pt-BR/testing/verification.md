@@ -43,4 +43,4 @@ Nenhum check real usou bancos existentes. Deploy de produção, navegador/Postma
 
 Inspecionados HTTP/serviço/configuração, contador, Base62/obfuscação, adapter Cassandra, fakes, manifestos e Compose/bootstrap. Documentados limites de padding customizado e perda do contador após inicialização, sem alterar código. Orientação de configuração e aprofundamentos/estudo atualizados. Não executados testes, requests, bootstrap, instalação ou operações Redis/Cassandra. Resultados anteriores de 82 testes/smoke isolado não foram repetidos.
 
-Checagens estáticas de links/âncoras, fences, pares de idioma e SHA-256 para alterações somente documentais estão na [revisão de entrevista](../../../tecnical-interview/docs/pt-BR/verification.md). Arquivos reais de ambiente e backups sensíveis não foram lidos/alterados.
+Checagens estáticas de links/âncoras, fences, pares de idioma e SHA-256 para alterações somente documentais estão na [revisão de entrevista](../../../../engineering-library/docs/pt-BR/testing/verification.md). Arquivos reais de ambiente e backups sensíveis não foram lidos/alterados.

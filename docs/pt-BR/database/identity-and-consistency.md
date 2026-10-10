@@ -1,0 +1,13 @@
+# Identidade, mapeamentos e consistência
+
+[English](../../en/database/identity-and-consistency.md) | [Português brasileiro](identity-and-consistency.md)
+
+Revisão estática do código: 2026-10-10. Fatos implementados, teoria geral e mudanças hipotéticas são separados abaixo. Comandos runtime não foram executados.
+
+Redis `SET NX` inicializa o contador compartilhado em início menos um; `INCR` aloca inteiro atomicamente no servidor. O lock do processo e `_initialized` evitam inicialização redundante no mesmo gerador; NX trata inicializadores concorrentes entre processos. Nem lock nem INCR criam transação com Cassandra. `urls_by_id` usa `id bigint PRIMARY KEY` e `original_url text`; inserts e consultas usam valores vinculados. A tabela corresponde à consulta por chave única, não a joins ou busca por destino.
+
+Se alocação funciona e gravação falha, o ID é consumido. Timeout após Cassandra aceitar a escrita pode deixar mapeamento embora o cliente veja falha. Retry da criação aloca outro ID. Lacunas são inofensivas se IDs existentes nunca forem reutilizados, mas perder/reiniciar o contador com mapeamentos preservados pode sobrescrever uma linha, pois INSERT é upsert. AOF Redis `everysec` está configurado localmente; não é durabilidade sem perda nem backup coordenado dos dois bancos. Restauração exige piso do contador consistente com mapeamentos preservados e compatibilidade de alfabeto/chave. Não há coordenador automático de reparo/recuperação.
+
+Compose/bootstrap tem três peers Cassandra e NetworkTopologyStrategy RF=3. São locais, não três domínios de falha de hosts independentes. Seeds auxiliam descoberta, não eleição de líder. `DCAwareRoundRobinPolicy` define preferência pelo DC local, mas o perfil não seleciona explicitamente consistência de leitura/gravação. RF sozinho não garante leitura após escrita. Leituras/gravações quorum são alternativa hipotética que troca acknowledgements e disponibilidade por maior sobreposição; gravações condicionais tratariam outra invariante e acrescentariam coordenação.
+
+Codificar inteiro usa divmod sucessivo por 62; a ofuscação de sete caracteres opera módulo `62**7`. SHA-256 deriva parâmetros afins, `gcd(a, módulo)=1` permite inversa modular e padding dá largura fixa no alfabeto padrão. O contador pode exceder esse espaço; o serviço então retorna erro de configuração após consumir um ID. Alfabetos personalizados têm uma preocupação adicional de compatibilidade não resolvida: o padding é `0` literal, que pode não representar o dígito zero. Mudanças arbitrárias de alfabeto são não verificadas, não migrações transparentes suportadas.

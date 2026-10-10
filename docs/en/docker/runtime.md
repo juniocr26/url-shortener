@@ -1,8 +1,8 @@
 # Docker Development
 
-[English](docker.md) | [Português](../pt-BR/docker.md)
+[English](runtime.md) | [Português](../../pt-BR/docker/runtime.md)
 
-For host-persisted Python dependencies and safe installation without database startup, follow [Docker development setup and recovery](docker-development-setup.md). The base startup below performs schema writes and is not a dependency audit.
+For host-persisted Python dependencies and safe installation without database startup, follow [Docker development setup and recovery](development.md). The base startup below performs schema writes and is not a dependency audit.
 
 ## Philosophy
 
@@ -205,4 +205,4 @@ Stop services without deleting data:
 docker compose stop
 ```
 
-Dependency recovery does not require volume removal. Redis and Cassandra data must be preserved; use the dedicated [recovery guide](docker-development-setup.md).
+Dependency recovery does not require volume removal. Redis and Cassandra data must be preserved; use the dedicated [recovery guide](development.md).

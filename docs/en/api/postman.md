@@ -1,10 +1,10 @@
 # Postman Collection
 
-[English](postman.md) | [Português](../pt-BR/postman.md)
+[English](postman.md) | [Português](../../pt-BR/api/postman.md)
 
 This guide describes the Postman collection for interacting with the URL Shortener API during local development.
 
-The tracked file has an environment-like filename, but its JSON declares Postman collection schema v2.1 and contains two requests. Import it as a collection; a separate environment is not required. [Open the actual collection](../../collections/postman/url-shortener.local.postman_environment.json).
+The tracked file has an environment-like filename, but its JSON declares Postman collection schema v2.1 and contains two requests. Import it as a collection; a separate environment is not required. [Open the actual collection](../../../collections/postman/url-shortener.local.postman_environment.json).
 
 ## Collection
 

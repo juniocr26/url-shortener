@@ -1,6 +1,6 @@
 # url-shortener
 
-[English](../en/guide.md) | [Português](guide.md)
+[English](../../en/guides/project-guide.md) | [Português](project-guide.md)
 
 `url-shortener` é um projeto de portfólio de Backend/System Design com abordagem Docker-first que implementa a criação de URLs encurtadas e a resolução pública de redirecionamentos utilizando FastAPI, Redis, Cassandra, codificação Base62 e ofuscação reversível de códigos curtos.
 
@@ -71,7 +71,7 @@ O arquivo `.env` é ignorado pelo Git. Não faça commit de senhas reais do Redi
 
 Variáveis importantes:
 
-- `BASE62_ALPHABET`: mantenha o padrão iniciado em zero para o preenchimento implementado; alfabetos arbitrários têm [limitação documentada](architecture.md). Mudar alfabeto/chave rompe decoding existente sem estratégia de versão/migração.
+- `BASE62_ALPHABET`: mantenha o padrão iniciado em zero para o preenchimento implementado; alfabetos arbitrários têm [limitação documentada](../architecture/overview.md). Mudar alfabeto/chave rompe decoding existente sem estratégia de versão/migração.
 - `SHORT_URL_BASE`: URL base utilizada para construir `short_url`.
 - `URL_ID_START`: valor inicial usado como referência para a geração de IDs. O padrão é `14776336`, equivalente a `62^4`.
 - `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD`: obrigatórios para `POST /urls`.
@@ -130,7 +130,7 @@ docker compose stop
 ```
 
 
-[Testes](testing.md) · [Arquitetura e trade-offs](architecture.md) · [Docker](docker.md) · [Postman](postman.md)
+[Testes](../testing/strategy.md) · [Arquitetura e trade-offs](../architecture/overview.md) · [Docker](../docker/runtime.md) · [Postman](../api/postman.md)
 
 ## Autor
 
