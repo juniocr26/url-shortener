@@ -22,3 +22,20 @@ Leia propósito/setup, arquitetura e contratos, segurança/falhas, testes/evidê
 - [Resultados de validação](docs/pt-BR/testing/verification.md)
 
 [Licença](LICENSE)
+
+## Início rápido e escopo
+
+Em clone novo, instale Docker/Compose, copie o exemplo e configure privadamente Basic Auth, ofuscação e credenciais do banco:
+
+```sh
+cp .env.example .env
+# Configure private local credentials before starting.
+docker compose build
+docker compose up -d
+```
+
+API: http://localhost:8000. Startup inclui três nós Cassandra e bootstrap de roles/schema. POST /urls exige Basic Auth; GET /{short_code} é público. Coordene recuperação de contador e mapeamentos; não há transação conjunta.
+
+Em checkout existente, atualize a configuração deliberadamente sem sobrescrever o arquivo local.
+
+[Instalação, fluxo de execução, limites operacionais e entrevista do projeto](docs/pt-BR/guides/implementation-study.md). Comandos são orientação; esta manutenção documental não executou testes da aplicação.

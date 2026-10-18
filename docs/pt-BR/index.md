@@ -57,3 +57,7 @@ Autenticação, autorização, dados e recursos.
 - [Autenticação, ofuscação e transporte](security/identity-and-transport.md)
 
 Aplicabilidade e omissões estão justificadas no [checklist](operations/completion-checklist.md). Não há categorias vazias.
+
+## Roteiro prático de implementação e entrevista
+
+[Acompanhe uma requisição, examine falhas e pratique respostas](guides/implementation-study.md).

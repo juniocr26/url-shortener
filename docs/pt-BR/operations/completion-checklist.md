@@ -1,3 +1,20 @@
+# Manutenção documental — 2026-10-18
+
+Base `40e4ea05d6e4d2d5ae81d2020ec6ea7936330d44`; árvore inicialmente limpa. Esta é manutenção documental estática. Contagens históricas de testes abaixo pertencem à data/revisão original e não foram reexecutadas.
+
+- [x] Inventário e revisão de código
+- [x] Estrutura e conteúdo da implementação
+- [x] Cobertura equivalente em inglês/português
+- [x] Navegação e links locais
+- [x] Entrevista do projeto e cobertura na Engineering Library
+- [x] Lacunas de evidência e exceções justificadas
+
+[Revisão atual e limites de evidência](../guides/implementation-study.md).
+
+A conclusão diz respeito à cobertura documental, não à prontidão de produção, certificação de runtime ou resolução das lacunas de evidência. Resultados do validador estão na revisão da biblioteca.
+
+## Checklists históricos (datas e escopo originais)
+
 # url-shortener: Checklist de conclusão do repositório
 
 Revisão estática em 2026-10-10; sem execução runtime. Itens marcados indicam documentação concluída, não funcionalidades entregues ou lacunas encerradas.
