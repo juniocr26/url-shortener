@@ -1,6 +1,8 @@
+> 2026-10-29: source inspection included [test_http.py](../../../tests/test_http.py). The cases were inspected, not executed. Dated results elsewhere are historical; no new coverage or runtime success is claimed.
+
 # Project Tests
 
-[English](strategy.md) | [Português](../../pt-BR/testing/strategy.md)
+[English](strategy.md) | [Português](../../pt-br/testing/strategy.md)
 
 The `tests/` directory contains the automated test suite for the implemented URL shortener backend.
 

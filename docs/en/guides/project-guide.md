@@ -1,6 +1,6 @@
 # url-shortener
 
-[English](project-guide.md) | [Português](../../pt-BR/guides/project-guide.md)
+[English](project-guide.md) | [Português](../../pt-br/guides/project-guide.md)
 
 `url-shortener` is a Docker-first backend/system-design portfolio project that implements URL creation and public redirect resolution with FastAPI, Redis, Cassandra, Base62 encoding, and reversible short-code obfuscation.
 

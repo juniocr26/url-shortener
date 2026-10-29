@@ -8,56 +8,58 @@ Percurso: propósito/setup → arquitetura/contratos → segurança/falhas → t
 
 Componentes, fluxos e fronteiras implementadas.
 
-- [Arquitetura](architecture/overview.md)
+- [Arquitetura](../pt-br/architecture/overview.md)
 
 ## guides
 
 Setup, pré-requisitos e procedimentos de leitura.
 
-- [url-shortener](guides/project-guide.md)
+- [url-shortener](../pt-br/guides/project-guide.md)
 
 ## testing
 
 Estratégia, inventários e evidências datadas.
 
-- [Testes do Projeto](testing/strategy.md)
-- [Validação documental — 2026-10-06](testing/verification.md)
+- [Testes do Projeto](../pt-br/testing/strategy.md)
+- [Validação documental — 2026-10-06](../../../engineering-library/docs/pt-br/projects/engineering-library/docs/pt-br/testing/documentation.md)
 
 ## docker
 
 Imagens, serviços, mounts e configuração local.
 
-- [Desenvolvimento Docker e recuperação](docker/development.md)
-- [Desenvolvimento com Docker](docker/runtime.md)
+- [Desenvolvimento Docker e recuperação](../pt-br/docker/development.md)
+- [Desenvolvimento com Docker](../pt-br/docker/runtime.md)
 
 ## database
 
 Modelos, constraints, migrações e consistência.
 
-- [Identidade, mapeamentos e consistência](database/identity-and-consistency.md)
+- [Identidade, mapeamentos e consistência](../pt-br/database/identity-and-consistency.md)
 
 ## api
 
 Contratos expostos e comportamento de clientes.
 
-- [Contrato de criação e redirecionamento](api/contracts.md)
-- [Collection do Postman](api/postman.md)
+- [Contrato de criação e redirecionamento](../pt-br/api/contracts.md)
+- [Collection do Postman](../pt-br/api/postman.md)
 
 ## operations
 
 Diagnóstico, recuperação, checklists e registros históricos.
 
-- [url-shortener: Checklist de conclusão do repositório](operations/completion-checklist.md)
-- [Implantação e recuperação coordenada](operations/deployment-and-recovery.md)
+- [url-shortener: Checklist de conclusão do repositório](../pt-br/operations/completion-checklist.md)
+- [Implantação e recuperação coordenada](../pt-br/operations/deployment-and-recovery.md)
 
 ## security
 
 Autenticação, autorização, dados e recursos.
 
-- [Autenticação, ofuscação e transporte](security/identity-and-transport.md)
+- [Autenticação, ofuscação e transporte](../pt-br/security/identity-and-transport.md)
 
-Aplicabilidade e omissões estão justificadas no [checklist](operations/completion-checklist.md). Não há categorias vazias.
+Aplicabilidade e omissões estão justificadas no [checklist](../pt-br/operations/completion-checklist.md). Não há categorias vazias.
 
 ## Roteiro prático de implementação e entrevista
 
-[Acompanhe uma requisição, examine falhas e pratique respostas](guides/implementation-study.md).
+[Acompanhe uma requisição, examine falhas e pratique respostas](../pt-br/guides/implementation-study.md).
+
+- [Validação documental — 2026-10-06](testing/verification.md)

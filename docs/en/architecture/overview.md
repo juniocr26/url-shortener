@@ -1,6 +1,12 @@
 # Architecture
 
-[English](overview.md) | [Português](../../pt-BR/architecture/overview.md)
+## Current source responsibilities — 2026-10-29
+
+UrlShortenerService currently coordinates Redis ID allocation, Base62/obfuscation and Cassandra storage. Its name does not make that orchestration a purely technical service under the owner’s convention. Redis allocation and Cassandra persistence are separate calls, with no cross-store transaction; an allocation followed by storage failure can leave a gap.
+
+[Source inspected](../../../app/services/url_service.py). No application runtime check or test execution is implied. Historical results below were not rerun.
+
+[English](overview.md) | [Português](../../pt-br/architecture/overview.md)
 
 ## Purpose
 

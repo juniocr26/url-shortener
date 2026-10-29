@@ -1,6 +1,6 @@
 # Identity, mappings and consistency
 
-[English](identity-and-consistency.md) | [Português brasileiro](../../pt-BR/database/identity-and-consistency.md)
+[English](identity-and-consistency.md) | [Português brasileiro](../../pt-br/database/identity-and-consistency.md)
 
 Static source review: 2026-10-10. Implemented facts, general theory and hypothetical changes are distinguished below. Runtime commands were not executed.
 

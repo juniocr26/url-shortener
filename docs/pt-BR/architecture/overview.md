@@ -1,6 +1,12 @@
 # Arquitetura
 
-[English](../../en/architecture/overview.md) | [Português](overview.md)
+## Responsabilidades no código atual — 29/10/2026
+
+UrlShortenerService coordena atualmente a alocação de ID no Redis, Base62/ofuscação e armazenamento Cassandra. Seu nome não transforma essa orquestração em serviço puramente técnico na convenção do proprietário. Alocação e persistência são chamadas separadas, sem transação entre os stores; uma alocação seguida de falha na persistência pode deixar uma lacuna.
+
+[Código inspecionado](../../../app/services/url_service.py). Não implica verificação da aplicação em execução ou execução de testes. Resultados históricos abaixo não foram reexecutados.
+
+[English](../../en/architecture/overview.md) | [Português](../../pt-br/architecture/overview.md)
 
 ## Propósito
 
@@ -296,7 +302,7 @@ O guia URL Shortener do Technical Interview sustenta a intenção de aprendizado
 
 **Reavaliar quando.** Produção/recuperação confiável forem necessárias: separar provisionamento privilegiado das credenciais runtime, definir health/readiness e testar dependências/falhas reais. Cache/broker precisam de requisito de carga/entrega.
 
-**Evidências:** [Compose](../../../compose.yaml), [Dockerfile](../../../docker/Dockerfile), [bootstrap](../../../docker/cassandra/bootstrap.sh), [health](../../../docker/cassandra/healthcheck.sh), [guia de testes](../testing/strategy.md).
+**Evidências:** [Compose](../../../compose.yaml), [Dockerfile](../../../docker/Dockerfile), [bootstrap](../../../docker/cassandra/bootstrap.sh), [health](../../../docker/cassandra/healthcheck.sh), [guia de testes](../../pt-br/testing/strategy.md).
 
 ### Verificação da revisão documental — 2026-10-05
 

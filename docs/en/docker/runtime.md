@@ -1,6 +1,6 @@
 # Docker Development
 
-[English](runtime.md) | [Português](../../pt-BR/docker/runtime.md)
+[English](runtime.md) | [Português](../../pt-br/docker/runtime.md)
 
 For host-persisted Python dependencies and safe installation without database startup, follow [Docker development setup and recovery](development.md). The base startup below performs schema writes and is not a dependency audit.
 

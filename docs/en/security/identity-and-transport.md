@@ -1,6 +1,6 @@
 # Authentication, obfuscation and transport
 
-[English](identity-and-transport.md) | [Português brasileiro](../../pt-BR/security/identity-and-transport.md)
+[English](identity-and-transport.md) | [Português brasileiro](../../pt-br/security/identity-and-transport.md)
 
 Static source review: 2026-10-10. Implemented facts, general theory and hypothetical changes are distinguished below. Runtime commands were not executed.
 

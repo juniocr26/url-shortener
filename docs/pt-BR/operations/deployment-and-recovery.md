@@ -1,6 +1,6 @@
 # Implantação e recuperação coordenada
 
-[English](../../en/operations/deployment-and-recovery.md) | [Português brasileiro](deployment-and-recovery.md)
+[English](../../en/operations/deployment-and-recovery.md) | [Português brasileiro](../../pt-br/operations/deployment-and-recovery.md)
 
 Revisão estática do código: 2026-10-10. Fatos implementados, teoria geral e mudanças hipotéticas são separados abaixo. Comandos runtime não foram executados.
 

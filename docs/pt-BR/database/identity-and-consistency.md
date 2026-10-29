@@ -1,6 +1,6 @@
 # Identidade, mapeamentos e consistência
 
-[English](../../en/database/identity-and-consistency.md) | [Português brasileiro](identity-and-consistency.md)
+[English](../../en/database/identity-and-consistency.md) | [Português brasileiro](../../pt-br/database/identity-and-consistency.md)
 
 Revisão estática do código: 2026-10-10. Fatos implementados, teoria geral e mudanças hipotéticas são separados abaixo. Comandos runtime não foram executados.
 

@@ -1,6 +1,6 @@
 # Postman Collection
 
-[English](postman.md) | [Português](../../pt-BR/api/postman.md)
+[English](postman.md) | [Português](../../pt-br/api/postman.md)
 
 This guide describes the Postman collection for interacting with the URL Shortener API during local development.
 

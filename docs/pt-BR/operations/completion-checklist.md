@@ -9,7 +9,7 @@ Base `40e4ea05d6e4d2d5ae81d2020ec6ea7936330d44`; árvore inicialmente limpa. Est
 - [x] Entrevista do projeto e cobertura na Engineering Library
 - [x] Lacunas de evidência e exceções justificadas
 
-[Revisão atual e limites de evidência](../guides/implementation-study.md).
+[Revisão atual e limites de evidência](../../pt-br/guides/implementation-study.md).
 
 A conclusão diz respeito à cobertura documental, não à prontidão de produção, certificação de runtime ou resolução das lacunas de evidência. Resultados do validador estão na revisão da biblioteca.
 
@@ -43,7 +43,7 @@ Revisão estática em 2026-10-10; sem execução runtime. Itens marcados indicam
 
 Contratos POST/301; Basic versus TLS; matemática Base62/afim; falhas entre bancos; inicialização/perda Redis; modelo Cassandra/RF/consistência; lifecycle, testes e recuperação.
 
-[Self-contained dossier / Dossiê](../../../../engineering-library/docs/pt-BR/architecture/url-shortener.md) | [Interview / Entrevista](../../../../engineering-library/docs/pt-BR/interviews/url-shortener.md)
+[Self-contained dossier / Dossiê](../../../../engineering-library/docs/pt-br/projects/url-shortener/docs/pt-br/architecture/overview.md) | [Interview / Entrevista](../../../../engineering-library/docs/pt-br/projects/url-shortener/docs/pt-br/faq/index.md)
 
 ## Aplicabilidade das categorias
 

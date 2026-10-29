@@ -1,6 +1,6 @@
 # Autenticação, ofuscação e transporte
 
-[English](../../en/security/identity-and-transport.md) | [Português brasileiro](identity-and-transport.md)
+[English](../../en/security/identity-and-transport.md) | [Português brasileiro](../../pt-br/security/identity-and-transport.md)
 
 Revisão estática do código: 2026-10-10. Fatos implementados, teoria geral e mudanças hipotéticas são separados abaixo. Comandos runtime não foram executados.
 

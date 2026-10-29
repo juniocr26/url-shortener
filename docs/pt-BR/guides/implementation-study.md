@@ -4,7 +4,7 @@ Revisão estática: 2026-10-18 em `40e4ea05d6e4d2d5ae81d2020ec6ea7936330d44`. Es
 
 ## Instale e acompanhe
 
-Use o [setup Docker](../docker/runtime.md) e `.env.example`; configure privadamente credenciais Basic, chave de ofuscação e credenciais Cassandra. `docker compose up -d` depende das etapas documentadas de imagem/build e inicia um Redis, três nós Cassandra e bootstrap. O bootstrap altera roles/schema e a aplicação também cria sua tabela. É orientação operacional, não ação executada aqui. API padrão localhost:8000. [Recuperação de desenvolvimento](../docker/development.md) separa reparo de dependências de destruição de dados.
+Use o [setup Docker](../../pt-br/docker/runtime.md) e `.env.example`; configure privadamente credenciais Basic, chave de ofuscação e credenciais Cassandra. `docker compose up -d` depende das etapas documentadas de imagem/build e inicia um Redis, três nós Cassandra e bootstrap. O bootstrap altera roles/schema e a aplicação também cria sua tabela. É orientação operacional, não ação executada aqui. API padrão localhost:8000. [Recuperação de desenvolvimento](../../pt-br/docker/development.md) separa reparo de dependências de destruição de dados.
 
 `app/api/routes.py` → controller → `UrlShortenerService` → infraestrutura. POST `/urls` valida URL HTTP(S), verifica Basic Auth, obtém ID via Redis `SET NX`/`INCR`, codifica Base62, aplica permutação afim reversível de sete caracteres e grava `id → original_url` no Cassandra. Retorna então 201. GET `/{short_code}` inverte a transformação e retorna 301; não consulta Redis nem exige Basic Auth. Lifespan reutiliza e fecha o cliente Redis e sessão/cluster Cassandra.
 
@@ -24,4 +24,4 @@ A transformação afim é ofuscação, não criptografia, autorização ou TLS. 
 
 **Desafiadora — RF=3 e INCR provam recuperação segura de desastre?** Não. Replicação não coordena histórico Redis, protege upserts nem substitui backups. Aprofundamento: especifique consistência e ordem de recuperação, teste perda de contador e concorrência em recursos isolados e rejeite reutilização antes de prometer recuperação segura. São requisitos propostos, não controles implementados.
 
-[API](../api/contracts.md), [identidade](../database/identity-and-consistency.md), [segurança](../security/identity-and-transport.md) e [estratégia de testes](../testing/strategy.md) detalham os contratos. Fakes existentes cobrem HTTP, helpers e chamadas dos adaptadores; não demonstram partições/failover reais. Nenhuma suíte da aplicação ou cluster foi executado nesta revisão.
+[API](../../pt-br/api/contracts.md), [identidade](../../pt-br/database/identity-and-consistency.md), [segurança](../../pt-br/security/identity-and-transport.md) e [estratégia de testes](../../pt-br/testing/strategy.md) detalham os contratos. Fakes existentes cobrem HTTP, helpers e chamadas dos adaptadores; não demonstram partições/failover reais. Nenhuma suíte da aplicação ou cluster foi executado nesta revisão.
