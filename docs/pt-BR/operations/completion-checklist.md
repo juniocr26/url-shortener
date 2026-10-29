@@ -43,7 +43,7 @@ Revisão estática em 2026-10-10; sem execução runtime. Itens marcados indicam
 
 Contratos POST/301; Basic versus TLS; matemática Base62/afim; falhas entre bancos; inicialização/perda Redis; modelo Cassandra/RF/consistência; lifecycle, testes e recuperação.
 
-[Self-contained dossier / Dossiê](../../../../engineering-library/docs/pt-br/projects/url-shortener/docs/pt-br/architecture/overview.md) | [Interview / Entrevista](../../../../engineering-library/docs/pt-br/projects/url-shortener/docs/pt-br/faq/index.md)
+[Self-contained dossier / Dossiê](../../../../engineering-library/docs/url-shortener/pt-br/architecture/overview.md) | [Interview / Entrevista](../../../../engineering-library/docs/url-shortener/pt-br/faq/index.md)
 
 ## Aplicabilidade das categorias
 

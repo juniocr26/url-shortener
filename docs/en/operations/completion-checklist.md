@@ -43,7 +43,7 @@ Static review on 2026-10-10; no runtime execution. Checked items describe comple
 
 POST/301 contracts; Basic versus TLS; Base62/affine mathematics; two-store failures; Redis initialization/state loss; Cassandra data model/RF/consistency; lifecycle, tests and recovery.
 
-[Self-contained dossier / Dossiê](../../../../engineering-library/docs/en/projects/url-shortener/docs/en/architecture/overview.md) | [Interview / Entrevista](../../../../engineering-library/docs/en/projects/url-shortener/docs/en/faq/index.md)
+[Self-contained dossier / Dossiê](../../../../engineering-library/docs/url-shortener/en/architecture/overview.md) | [Interview / Entrevista](../../../../engineering-library/docs/url-shortener/en/faq/index.md)
 
 ## Category applicability
 
