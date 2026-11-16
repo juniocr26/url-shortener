@@ -21,7 +21,7 @@ Setup, prerequisites and reading procedures.
 Test strategy, inventories and dated evidence.
 
 - [Project Tests](testing/strategy.md)
-- [Documentation validation — 2026-10-06](../../../engineering-library/docs/engineering-library/en/testing/documentation.md)
+- [Documentation validation — 2026-10-06](../../../../Projeto%20VivaBem/engineering-library/docs/engineering-library/en/testing/documentation.md)
 
 ## docker
 
@@ -63,3 +63,10 @@ Category applicability and omissions are justified in the [completion checklist]
 [Trace a request, inspect failure boundaries and rehearse answers](guides/implementation-study.md).
 
 - [Documentation validation — 2026-10-06](testing/verification.md)
+
+
+<!-- make-docs:source-summary:start -->
+- [Generated source draft (unreviewed)](guides/generated-source-summary.md)
+<!-- make-docs:source-summary:end -->
+
+- [Factual review of the generated draft](guides/generated-source-review.md)

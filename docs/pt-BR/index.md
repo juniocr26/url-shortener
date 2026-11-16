@@ -21,7 +21,7 @@ Setup, pré-requisitos e procedimentos de leitura.
 Estratégia, inventários e evidências datadas.
 
 - [Testes do Projeto](../pt-br/testing/strategy.md)
-- [Validação documental — 2026-10-06](../../../engineering-library/docs/engineering-library/pt-br/testing/documentation.md)
+- [Validação documental — 2026-10-06](../../../../Projeto%20VivaBem/engineering-library/docs/engineering-library/pt-br/testing/documentation.md)
 
 ## docker
 
@@ -63,3 +63,10 @@ Aplicabilidade e omissões estão justificadas no [checklist](../pt-br/operation
 [Acompanhe uma requisição, examine falhas e pratique respostas](../pt-br/guides/implementation-study.md).
 
 - [Validação documental — 2026-10-06](testing/verification.md)
+
+
+<!-- make-docs:source-summary:start -->
+- [Rascunho gerado do código (não revisado)](guides/generated-source-summary.md)
+<!-- make-docs:source-summary:end -->
+
+- [Revisão factual do rascunho gerado](guides/generated-source-review.md)
